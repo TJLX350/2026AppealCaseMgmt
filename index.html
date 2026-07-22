@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evich v. Stone — Case Command Center</title>
+</head>
+<body>
+<div id="root"></div>
+<style>
+  :root {
+    --navy: #1F3864; --navy-light: #2E4E8C; --gold: #B08D57;
+    --green: #4C7A4C; --red: #A33A3A; --gray-bg: #F5F5F3;
+    --text: #23262B; --muted: #6B7076;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: transparent; font-family: Georgia, 'Times New Roman', serif; color: var(--text); }
+  #root { max-width: 960px; margin: 0 auto; }
+
+  .header { background: var(--navy); color: white; padding: 20px 24px; border-radius: 8px 8px 0 0; }
+  .header .version { font-size: 12px; opacity: 0.75; font-family: Arial, sans-serif; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .header h1 { margin: 0 0 6px 0; font-size: 22px; }
+  .header .sub { font-size: 13px; opacity: 0.9; font-family: Arial, sans-serif; }
+
+  .maintabs { display: flex; gap: 4px; background: #111; padding: 0 12px; }
+  .maintab { padding: 12px 20px; cursor: pointer; font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; color: #aaa; border-bottom: 3px solid transparent; }
+  .maintab.active { color: white; border-bottom: 3px solid var(--gold); }
+  .maintab:hover { color: white; }
+
+  .body-panel { background: #fff; border: 1px solid #ddd; border-top: none; padding: 24px; border-radius: 0 0 8px 8px; }
+
+  .section-heading { font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin: 20px 0 10px 0; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+  .section-heading:first-child { margin-top: 0; }
+
+  table.ref { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 8px; }
+  table.ref th { background: var(--navy); color: white; font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase; padding: 8px; text-align: left; }
+  table.ref td { border: 1px solid #ddd; padding: 8px; vertical-align: top; line-height: 1.4; }
+  table.ref tr:nth-child(even) td { background: var(--gray-bg); }
+  .cite { font-family: Arial, sans-serif; font-size: 11px; color: var(--muted); background: #eee; padding: 1px 6px; border-radius: 3px; }
+  .flag { background: #fdecea; border-left: 3px solid var(--red); }
+  .discovery-badge { display: inline-block; background: var(--red); color: white; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+
+  ul.plain { margin: 0; padding-left: 20px; }
+  ul.plain li { margin-bottom: 6px; line-height: 1.5; }
+
+  .tabs { display: flex; gap: 6px; padding: 16px 24px 0 24px; background: var(--gray-bg); border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
+  .tab { flex: 1; text-align: center; padding: 12px 8px; border-radius: 8px 8px 0 0; cursor: pointer; font-family: Arial, sans-serif; font-weight: bold; font-size: 13px; background: #E3E3DF; color: var(--muted); border: 1px solid #ccc; border-bottom: none; }
+  .tab.active.attorney { background: var(--navy); color: white; }
+  .tab.active.judge { background: var(--gold); color: white; }
+  .tab.active.opposing { background: var(--red); color: white; }
+  .tab:not(.active):hover { background: #d5d5d0; }
+  .panel { background: #fff; border: 1px solid #ddd; border-radius: 0 0 8px 8px; padding: 24px; }
+  .panel-label { font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 4px; }
+  .panel-label.attorney { color: var(--navy); } .panel-label.judge { color: var(--gold); } .panel-label.opposing { color: var(--red); }
+  .panel-title { font-size: 18px; margin: 0 0 14px 0; }
+  .anchor { border-left: 4px solid; padding: 10px 16px; margin: 14px 0; background: var(--gray-bg); font-style: italic; font-size: 15px; }
+  .anchor.attorney { border-color: var(--navy); } .anchor.judge { border-color: var(--gold); } .anchor.opposing { border-color: var(--red); }
+  .badge-row { display: flex; gap: 10px; align-items: center; margin: 14px 0; font-family: Arial, sans-serif; }
+  .strength-badge { display: inline-block; padding: 4px 14px; border-radius: 14px; font-weight: bold; font-size: 13px; color: white; background: var(--green); }
+  .strength-note { font-size: 12px; color: var(--muted); }
+
+  .dictate-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .dictate-btn { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; background: var(--navy); color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .dictate-btn.listening { background: var(--red); }
+  .dictate-btn:disabled { background: #bbb; cursor: not-allowed; }
+  .mic-dot { width: 8px; height: 8px; border-radius: 50%; background: white; }
+  .dictate-btn.listening .mic-dot { animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  textarea.notesarea { width: 100%; min-height: 70px; border: 1px solid #ccc; border-radius: 6px; padding: 10px; font-family: Arial, sans-serif; font-size: 13px; resize: vertical; }
+  .notes-status { font-family: Arial, sans-serif; font-size: 11px; color: var(--muted); margin-top: 4px; height: 14px; }
+
+  .voice-entry { border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 10px; background: var(--gray-bg); }
+  .voice-entry .meta { font-family: Arial, sans-serif; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .voice-entry select { font-family: Arial, sans-serif; font-size: 11px; }
+  .voice-entry .delete-btn { background: none; border: none; color: var(--red); cursor: pointer; font-family: Arial, sans-serif; font-size: 11px; }
+
+  .footnote { font-family: Arial, sans-serif; font-size: 11px; color: var(--muted); text-align: center; margin-top: 10px; }
+  .compat-note { font-family: Arial, sans-serif; font-size: 12px; color: var(--muted); background: var(--gray-bg); border-radius: 6px; padding: 10px; margin-bottom: 14px; }
+</style>
+
+<script>
+  // ================= DATA =================
+
+  const CASE_INFO = {
+    caseNo: "2024DR31793", court: "Arapahoe County District Court, Division 11",
+    apCaseNo: "2026CA1119",
+    hearingJudge: "Michelle Elizabeth Jones \u2014 trial/hearing judge; issued Dec. 4, 2025 Final Order and Apr. 21, 2026 Rule 59 Order",
+    caseMgmtJudge: "Christine Alexandra Washburn \u2014 judicial officer for bifurcation, discovery rulings, and Apr. 23, 2026 order",
+    petitioner: "Deanna Dawn Evich (Pro Se as of Rule 59 stage)",
+    respondent: "Lisa Gay Stone",
+    petCounselHistory: "Joseph Antolinez (Oct. 2024\u2013June 25, 2025) \u2192 Alexandra White (June 27, 2025\u2013Dec. 18, 2025 withdrawal filed; granted ~Jan. 6, 2026) \u2192 Pro Se",
+    respCounsel: "Kelley Rider Goodwin, Rider Goodwin Law Offices (district court) / Sharlene J. Aitken, Aitken Law LLC (appeal, entered 6/26/26)",
+    caseType: "Same-sex, common-law Dissolution of Marriage \u2014 relationship alleged 1996\u2013Oct. 27, 2024"
+  };
+
+  const JTMC_FACTS = [
+    { text: "Petitioner designated as primary beneficiary on three real properties (Chenango Place, El Toro Way, Ski Hill Road).", cite: "JTMC \u00b6\u00b6 I, J, K" },
+    { text: "Spousal health insurance coverage arrangement.", cite: "JTMC \u00b6 H" },
+    { text: "Continued cohabitation confirmed post-2015.", cite: "JTMC \u00b6 C" },
+    { text: "IRA beneficiary designations.", cite: "JTMC \u00b6\u00b6 L, P" }
+  ];
+
+  const TIMELINE = [
+    { date: "10/27/2024", event: "Petition for Dissolution of Marriage filed." },
+    { date: "10/28/2024", event: "Respondent personally served." },
+    { date: "11/15/2024", event: "Respondent's Response filed, contesting common-law marriage." },
+    { date: "1/21/2025", event: "Judge Washburn orders stay of Rule 16.2 financial disclosures pending marriage determination." },
+    { date: "2/27/2025", event: "Undisclosed beneficiary deed change (reversed 3/26/2025)." },
+    { date: "4/30/2025", event: "Judge Washburn denies Petitioner's Motion to Compel financial discovery." },
+    { date: "6/25/2025", event: "Attorney Joseph Antolinez's representation ends." },
+    { date: "6/27/2025", event: "Attorney Alexandra White enters as substitute counsel." },
+    { date: "10/24/2025", event: "Joint Trial Management Certificate (JTMC) filed \u2014 stipulated facts." },
+    { date: "10/28/2025", event: "Full-day evidentiary hearing before Judge Jones." },
+    { date: "12/4/2025", event: "Final Order: no marriage found; petition dismissed with prejudice. (Findings 52 and 83 as originally entered.)" },
+    { date: "12/18/2025", event: "Motion for Extension of Time to file Rule 59 motion; Alexandra White files motion to withdraw same day." },
+    { date: "2/4/2026", event: "Second undisclosed beneficiary deed change (Chenango Place only), during Rule 59 pendency \u2014 not reversed." },
+    { date: "2/17/2026", event: "Petitioner's Rule 59 Motion for Post-Trial Relief filed, pro se." },
+    { date: "3/31/2026", event: "Petitioner files Notice of Asset Designation Changes (Filing ID BBE04964FFF24), documenting both the 2/27/25 and 2/4/26 deed changes." },
+    { date: "3/31 \u2192 4/21/2026", event: "21 days pass \u2014 no response from Respondent, no ruling from either judge on the Notice.", flag: true },
+    { date: "4/21/2026, 12:32 PM", event: "Judge Jones GRANTS IN PART Rule 59 motion \u2014 corrects Finding 52 and Finding 51; calls Finding 52 change a 'clerical error' and both changes 'minor amendments.'" },
+    { date: "4/21/2026, 8:52 PM", event: "Respondent's Response/Objection to the Notice AND an unsigned proposed order striking the Notice are both filed under the SAME Filing ID (CEB18BE48151A). Her defense covers only the 2/4/26 change; the 2/27/25 change is called 'irrelevant' with no defense offered.", flag: true },
+    { date: "4/23/2026", event: "Judge Washburn's actual signed order states Court 'TAKES NO ACTION' and characterizes the Rule 59 motion as 'denied' \u2014 conflicting with both the proposed order's 'strikes/denies' language and with Jones's actual 'granted in part' ruling.", flag: true },
+    { date: "~1/6/2026", event: "Alexandra White's motion to withdraw granted (approximate)." },
+    { date: "6/9/2026", event: "Notice of Appeal filed; Court of Appeals case 2026CA1119 opened." }
+  ];
+
+  const FINDINGS_XREF = [
+    {
+      topic: "Beneficiary designation on 3 properties (Chenango Place, El Toro Way, Ski Hill Road)",
+      rows: [
+        { source: "Finding 52 (ORIGINAL, 12/4/25)", text: "\u201cEach revocable beneficiary deed designated Respondent as grantee-beneficiary with Respondent's son...as successor grantee-beneficiary.\u201d \u2014 omits Petitioner entirely.", cite: "Order, 12/4/2025" },
+        { source: "Finding 83 (SAME ORDER, 12/4/25)", text: "Lists as a totality factor: \u201cbeneficiary designations by Respondent in favor of Petitioner.\u201d \u2014 directly contradicts Finding 52 in the SAME order, before any correction.", cite: "Order, 12/4/2025, Finding 83", flagRow: true, discovery: true },
+        { source: "JTMC Stipulation", text: "Petitioner designated primary beneficiary on all three properties \u2014 stipulated by both parties.", cite: "JTMC \u00b6\u00b6 I, J, K" },
+        { source: "Exhibit 48", text: "Recorded 2010 beneficiary deed language naming Petitioner as grantee-beneficiary on all three properties.", cite: "Admitted Ex. 48, pp.1-3" },
+        { source: "Finding 52 (CORRECTED, Rule 59 Order, 4/21/26)", text: "\u201cEach revocable beneficiary deed...designated Petitioner as grantee-beneficiary with Respondent's son...as successor.\u201d \u2014 now matches JTMC, Exhibit 48, AND Finding 83.", cite: "Rule 59 Order, 4/21/2026" },
+        { source: "Court's Characterization", text: "\u201cFinding 52 entered by the Court contained a clerical error.\u201d Then, collectively with Finding 51's correction: \u201cThese minor amendments to the Court's findings do not necessitate any amendment of judgment...\u201d", cite: "Rule 59 Order, 4/21/2026", flagRow: true }
+      ]
+    },
+    {
+      topic: "Petitioner's employment status, 2006",
+      rows: [
+        { source: "Finding 38 (12/4/25, unchanged)", text: "Petitioner \u201cacted as a realtor and contributed what would have been her commission fees\u201d at the March 2006 Chenango Place purchase.", cite: "Order, 12/4/2025" },
+        { source: "Finding 51 (ORIGINAL, 12/4/25)", text: "\u201cAt the time of the declaration [Aug. 2006], Petitioner was unemployed.\u201d \u2014 directly inconsistent with Finding 38, same order.", cite: "Order, 12/4/2025", flagRow: true },
+        { source: "Exhibit 40", text: "Colorado real estate license held Nov. 2004 through Nov. 2016.", cite: "Admitted Ex. 40" },
+        { source: "Exhibit 56", text: "March 2006 commission of $7,889 gross / $5,522 net on unrelated Chenango Place transaction.", cite: "Admitted Ex. 56, pp.1-4" },
+        { source: "Finding 51 (CORRECTED, Rule 59 Order, 4/21/26)", text: "\u201cPetitioner was working as a real estate agent earning minimum income\u201d at the time of the Aug. 2006 declaration.", cite: "Rule 59 Order, 4/21/2026" }
+      ]
+    },
+    {
+      topic: "Beneficiary deed changes during litigation \u2014 two occasions, one undefended",
+      rows: [
+        { source: "Petitioner's Notice (filed 3/31/2026)", text: "Documents TWO deed-change occasions: (1) 2/27/2025 \u2014 Chenango Place AND Grand Lodge/Ski Hill Rd, both undisclosed in 2/28/2025 discovery, restored 3/26/2025; (2) 2/4/2026 \u2014 Chenango Place only, during Rule 59 pendency, not disclosed, not reversed (Doc. E6007094).", cite: "Notice, Filing ID BBE04964FFF24, 3/31/2026" },
+        { source: "Respondent's Response \u00b6\u00b6 6\u20139 (4/21/2026)", text: "Builds a legal defense ONLY for the 2/4/2026 change: ATI terminated upon 12/4/2025 dismissal (\u00a7 14-10-107(4)(b)); beneficiary deeds freely revocable (\u00a7 15-15-402).", cite: "Response, 4/21/2026" },
+        { source: "Respondent's Response \u00b6 11 (4/21/2026)", text: "On the 2/27/2025 change \u2014 offers NO legal defense. Instead argues it is a 'separate historical event... not properly before the Court' and 'irrelevant.' Never disputes the underlying facts.", cite: "Response \u00b6 11, 4/21/2026", flagRow: true, discovery: true },
+        { source: "Asymmetry", text: "The ATI-termination defense (\u00a76) cannot reach the 2/27/2025 change \u2014 the case was still fully open, months before trial. No alternate defense is offered for it. The silence functions as a tacit concession that the earlier change had no lawful justification.", cite: "Analysis", flagRow: true, discovery: true }
+      ]
+    },
+    {
+      topic: "Same-day filing mechanics \u2014 Objection and proposed order",
+      rows: [
+        { source: "Respondent's Response and Objection", text: "Filed 4/21/2026, 8:52 PM \u2014 Filing ID CEB18BE48151A.", cite: "Response, 4/21/2026" },
+        { source: "\u201cOrder re Notice of Asset Designation Changes\u201d", text: "Filed 4/21/2026, 8:52 PM \u2014 SAME Filing ID CEB18BE48151A. Signature line and date line both blank \u2014 appears to be Respondent's own proposed order, submitted with her Objection, never judicially signed.", cite: "Proposed Order, 4/21/2026", flagRow: true, discovery: true },
+        { source: "Judge Washburn's actual signed order (4/23/2026)", text: "\u201cThe Court TAKES NO ACTION on these pleadings.\u201d \u2014 does not match the proposed order's \u201cSTRIKES...DENIES\u201d language. No signed order appears to have adopted the strike/deny outcome.", cite: "Order, 4/23/2026", flagRow: true }
+      ]
+    },
+      rows: [
+        { source: "Judge Jones, Rule 59 Order (4/21/2026)", text: "\u201cThe Court hereby, GRANTS in part the requests as follows...\u201d", cite: "Rule 59 Order, 4/21/2026" },
+        { source: "Judge Washburn, Order (4/23/2026)", text: "\u201cThe Court TAKES NO ACTION on these pleadings. The Court denied Petitioner's Motion for Post-Trial Relief.\u201d \u2014 mischaracterizes the 4/21 ruling as a denial when it was granted in part.", cite: "Order re: Asset Designation, 4/23/2026", flagRow: true, discovery: true }
+      ]
+    }
+  ];
+
+  const ISSUE = {
+    title: "Issue I",
+    statement: "Whether the trial court committed reversible error by altering a material stipulated fact from the Joint Trial Management Certificate (Finding 52), adjudicating the case on the altered factual foundation, and refusing to reweigh the Hogsett totality-of-the-circumstances test on the corrected record.",
+    standardOfReview: "Factual findings are reviewed for <strong>clear error</strong>; the application of the Hogsett legal standard to the facts is reviewed <strong>de novo</strong>. <span class='cite'>Hogsett v. Neale, 478 P.3d 713, 719 (Colo. 2021)</span>"
+  };
+
+  const FACTS = [
+    { text: "JTMC stipulated that Petitioner was designated primary beneficiary on three properties.", cite: "JTMC \u00b6\u00b6 I, J, K" },
+    { text: "Original Finding 52 (12/4/2025) omitted Petitioner and instead named Respondent/her son as beneficiary \u2014 contradicting the stipulation.", cite: "Order, 12/4/2025" },
+    { text: "Finding 83, in the SAME 12/4/2025 order, already lists \u201cbeneficiary designations by Respondent in favor of Petitioner\u201d as a totality factor \u2014 directly inconsistent with Finding 52 as originally written.", cite: "Order, 12/4/2025, Finding 83" },
+    { text: "Corrected Finding 52 (Rule 59 Order) restores Petitioner as primary grantee-beneficiary, now matching Finding 83, the JTMC, and Exhibit 48. The court characterized this as a 'clerical error,' and collectively with Finding 51's correction, as 'minor amendments.'", cite: "Rule 59 Order, 4/21/2026" },
+    { text: "Exhibit 8 is a revocable beneficiary deed reflecting estate-planning/inheritance intent, not a current property transfer.", cite: "Ex. 8; C.R.S. \u00a7 15-15-402" },
+    { text: "Related contradiction: Finding 38 recognizes an active real estate license and commission-earning work in March 2006, while Finding 51 (original) characterized Petitioner as 'unemployed' in August 2006 \u2014 corrected on Rule 59.", cite: "Order Finding 38; Finding 51" },
+    { text: "Two additional undisclosed beneficiary-deed changes occurred during litigation: 2/27/2025 (reversed 3/26/2025) and 2/4/2026, during Rule 59 pendency.", cite: "Doc. No. E6007094" },
+    { text: "Judge Washburn's 4/23/2026 order characterizes the Rule 59 motion as having been 'denied,' when Judge Jones's 4/21/2026 order actually granted it in part.", cite: "Order, 4/23/2026" }
+  ];
+
+  const AUTHORITIES = [
+    { text: "Testamentary designations and estate-planning instruments reflecting a committed relationship are a named Hogsett totality factor; no single factor is dispositive.", cite: "Hogsett, 478 P.3d at 721\u201324" },
+    { text: "For same-sex couples before marriage equality, conduct is primary evidence of marital intent because legal marriage was unavailable.", cite: "LaFleur v. Pyfer, 479 P.3d 869, 874\u201375 (Colo. 2021)" }
+  ];
+
+  const LENSES = {
+    attorney: {
+      label: "Attorney View", panelTitle: "Framing the strongest version of this issue",
+      anchor: "The trial court's own December 4, 2025 order contradicted itself on the central beneficiary fact \u2014 before any correction was ever requested.",
+      body: [
+        "Lead with the self-contradiction, not the later correction: Finding 83, in the very same order, already weighed \u201cbeneficiary designations by Respondent in favor of Petitioner\u201d as a totality factor \u2014 while Finding 52, two pages earlier in that same order, said the opposite. The trial court's own reasoning already depended on the true fact even as its formal finding stated the false one.",
+        "This reframes 'clerical error' and 'minor amendments' as legally untenable characterizations: Hogsett does not permit a court to declare a totality factor 'minor' without reweighing \u2014 no single factor is dispositive, but every factor must actually be weighed, and the court's own Finding 83 shows this factor was already doing weighing work in its analysis.",
+        "Anchor materiality in Exhibit 8's correct legal character: a revocable beneficiary deed under C.R.S. \u00a7 15-15-402 is an estate-planning instrument, not a transfer of present ownership \u2014 meaning Respondent named Petitioner ahead of her own biological son for 14+ years, which Hogsett treats as central testamentary-disposition evidence.",
+        "Because applying Hogsett to the corrected facts is a legal question, the court's failure to reweigh is reviewed de novo \u2014 and the Finding 83 self-contradiction demonstrates the trial court's own contemporaneous analysis already required reweighing that never formally occurred."
+      ]
+    },
+    judge: {
+      label: "Judge View", panelTitle: "Where a skeptical panel pushes back",
+      anchor: "If Finding 83 already reflected the true fact, doesn't that show the error was harmless \u2014 the court's ultimate conclusion already accounted for it?",
+      body: [
+        "A panel may read Finding 83 as proof the error was harmless rather than proof it was material: if the court's totality weighing in Finding 83 already credited Petitioner's beneficiary status and still ruled against her, the panel may conclude the outcome would not change even with Finding 52 corrected \u2014 this must be answered directly, not left as an implicit inference.",
+        "The panel may still ask why the trial court's own characterization of its correction as 'minor' isn't itself a permissible exercise of the court's judgment about materiality, notwithstanding the Finding 83 inconsistency.",
+        "Preservation risk remains: did the Rule 59 briefing point out the Finding 52/Finding 83 internal contradiction specifically, or only the JTMC/Exhibit 48 contradiction? If the internal self-contradiction argument is new on appeal, the panel may treat it as an unpreserved theory rather than a preserved one, even though the underlying facts were always in the record.",
+        "The Washburn 4/23 mischaracterization (calling a partial grant a denial) is a compelling anomaly, but a panel may see it as an isolated clerical slip in a subsequent, unrelated order rather than evidence bearing on Issue I itself \u2014 it strengthens a broader 'two-judge confusion' narrative more than it strengthens this specific issue."
+      ]
+    },
+    opposing: {
+      label: "Opposing Counsel View", panelTitle: "The steelman rebuttal to expect",
+      anchor: "Finding 83 shows the court weighed the correct fact and still ruled against Petitioner \u2014 the outcome does not turn on Finding 52.",
+      body: [
+        "Expect Respondent to argue Finding 83 actually defeats Petitioner's position: the trial court plainly considered 'beneficiary designations by Respondent in favor of Petitioner' as part of its totality analysis and still concluded the totality weighed against marriage \u2014 proving the Finding 52 error, whatever its label, was not outcome-determinative.",
+        "Expect Respondent to argue the 'clerical error' and 'minor amendments' labels are the trial court's own permissible characterization of its corrections, entitled to deference, and that Petitioner cannot leverage a favorable correction into a claim of additional prejudice.",
+        "Expect a waiver argument if the Finding 52/Finding 83 internal contradiction was not specifically raised in the Rule 59 motion \u2014 Respondent will argue this specific theory is being raised for the first time on appeal.",
+        "Expect Respondent to characterize the Washburn 4/23 order's 'denied' language as an obvious clerical slip with no legal effect, since the operative ruling is Judge Jones's 4/21 order granting in part \u2014 and to argue it has no bearing on Issue I."
+      ]
+    }
+  };
+
+  const STRENGTH = { rank: "A", note: "Strengthened by the Finding 83 self-contradiction, but the harmless-error and preservation questions above must be answered head-on to hold up." };
+
+  // ================= HELPERS =================
+  function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+
+  function speechSupported() {
+    return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  }
+
+  function attachDictation(textarea, statusEl, onCommit) {
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const row = el('div', 'dictate-row');
+    const btn = el('button', 'dictate-btn');
+    btn.innerHTML = '<span class="mic-dot"></span> Dictate';
+    row.appendChild(btn);
+    if (!Recognition) {
+      btn.disabled = true;
+      btn.title = 'Speech recognition not supported in this browser. Try Chrome or Edge.';
+      row.appendChild(el('span', 'notes-status', 'Voice input needs Chrome or Edge.'));
+      return row;
+    }
+    let recognizing = false;
+    let recognition;
+    btn.onclick = () => {
+      if (recognizing) { recognition.stop(); return; }
+      recognition = new Recognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      let finalTranscript = textarea.value ? textarea.value + ' ' : '';
+      recognition.onstart = () => { recognizing = true; btn.classList.add('listening'); btn.innerHTML = '<span class="mic-dot"></span> Listening... (click to stop)'; };
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript + ' ';
+          else interim += event.results[i][0].transcript;
+        }
+        textarea.value = finalTranscript + interim;
+      };
+      recognition.onerror = (e) => { if (statusEl) statusEl.textContent = 'Mic error: ' + e.error; };
+      recognition.onend = () => {
+        recognizing = false; btn.classList.remove('listening'); btn.innerHTML = '<span class="mic-dot"></span> Dictate';
+        if (onCommit) onCommit(textarea.value);
+      };
+      recognition.start();
+    };
+    return row;
+  }
+
+  async function storageGet(key) {
+    try { const v = localStorage.getItem('evich_tracker_' + key); return v === null ? null : v; } catch (e) { return null; }
+  }
+  async function storageSet(key, value) {
+    try { localStorage.setItem('evich_tracker_' + key, value); return true; } catch (e) { return false; }
+  }
+
+  // ================= APP STATE =================
+  let mainTab = 'foundation';
+  let issueLens = 'attorney';
+  let voiceLog = [];
+
+  async function loadVoiceLog() {
+    const raw = await storageGet('voice_log');
+    voiceLog = raw ? JSON.parse(raw) : [];
+  }
+  async function saveVoiceLog() {
+    await storageSet('voice_log', JSON.stringify(voiceLog));
+  }
+
+  // ================= RENDER: FOUNDATION =================
+  function renderFoundation(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Case Identifiers'));
+    const idTable = el('table', 'ref');
+    idTable.innerHTML = `
+      <tr><td style="font-weight:bold;width:220px;">District Court Case No.</td><td>${CASE_INFO.caseNo}</td></tr>
+      <tr><td style="font-weight:bold;">Court</td><td>${CASE_INFO.court}</td></tr>
+      <tr><td style="font-weight:bold;">Court of Appeals Case No.</td><td>${CASE_INFO.apCaseNo}</td></tr>
+      <tr><td style="font-weight:bold;">Case Type</td><td>${CASE_INFO.caseType}</td></tr>
+      <tr><td style="font-weight:bold;">Hearing Judge</td><td>${CASE_INFO.hearingJudge}</td></tr>
+      <tr><td style="font-weight:bold;">Case Management Judge</td><td>${CASE_INFO.caseMgmtJudge}</td></tr>
+      <tr><td style="font-weight:bold;">Petitioner</td><td>${CASE_INFO.petitioner}</td></tr>
+      <tr><td style="font-weight:bold;">Respondent</td><td>${CASE_INFO.respondent}</td></tr>
+      <tr><td style="font-weight:bold;">Petitioner's Counsel History</td><td>${CASE_INFO.petCounselHistory}</td></tr>
+      <tr><td style="font-weight:bold;">Respondent's Counsel</td><td>${CASE_INFO.respCounsel}</td></tr>
+    `;
+    panel.appendChild(idTable);
+
+    panel.appendChild(el('div', 'section-heading', 'JTMC Stipulated Facts'));
+    const jtmcList = el('ul', 'plain');
+    JTMC_FACTS.forEach(f => jtmcList.appendChild(el('li', null, f.text + ` <span class="cite">${f.cite}</span>`)));
+    panel.appendChild(jtmcList);
+
+    panel.appendChild(el('div', 'section-heading', 'Rulings & Procedural Timeline'));
+    const tlTable = el('table', 'ref');
+    tlTable.innerHTML = '<tr><th style="width:110px;">Date</th><th>Event</th></tr>' +
+      TIMELINE.map(t => `<tr${t.flag ? ' class="flag"' : ''}><td>${t.date}</td><td>${t.event}</td></tr>`).join('');
+    panel.appendChild(tlTable);
+
+    panel.appendChild(el('div', 'section-heading', 'Findings Cross-Reference (Breadcrumb Table)'));
+    FINDINGS_XREF.forEach(group => {
+      panel.appendChild(el('div', null, `<strong>${group.topic}</strong>`)).style.margin = '10px 0 6px 0';
+      const t = el('table', 'ref');
+      t.innerHTML = '<tr><th style="width:220px;">Source</th><th>Text</th><th style="width:140px;">Citation</th></tr>' +
+        group.rows.map(r => `<tr${r.flagRow ? ' class="flag"' : ''}><td>${r.source}${r.discovery ? '<span class="discovery-badge">KEY FIND</span>' : ''}</td><td>${r.text}</td><td class="cite">${r.cite}</td></tr>`).join('');
+      panel.appendChild(t);
+    });
+  }
+
+  // ================= RENDER: ISSUE I =================
+  function renderFactsList(items) {
+    const ul = el('ul', 'plain');
+    items.forEach(f => ul.appendChild(el('li', null, f.text + ` <span class="cite">${f.cite}</span>`)));
+    return ul;
+  }
+
+  async function renderIssue(panel) {
+    const sor = el('div', 'compat-note', '<strong>Standard of Review:</strong> ' + ISSUE.standardOfReview);
+    panel.appendChild(sor);
+    panel.appendChild(el('div', null, `<strong style="font-size:16px;">${ISSUE.title}</strong><div style="font-style:italic;margin-top:4px;">${ISSUE.statement}</div>`));
+
+    const tabs = el('div', 'tabs');
+    Object.keys(LENSES).forEach(key => {
+      const tab = el('div', 'tab' + (key === issueLens ? ' active ' + key : ''), LENSES[key].label);
+      tab.onclick = () => { issueLens = key; render(); };
+      tabs.appendChild(tab);
+    });
+    panel.appendChild(tabs);
+
+    const lensPanel = el('div', 'panel');
+    const lens = LENSES[issueLens];
+    lensPanel.appendChild(el('div', 'panel-label ' + issueLens, lens.label));
+    lensPanel.appendChild(el('div', 'panel-title', lens.panelTitle));
+    lensPanel.appendChild(el('div', 'anchor ' + issueLens, '&ldquo;' + lens.anchor + '&rdquo;'));
+    const bodyWrap = el('div');
+    lens.body.forEach(p => bodyWrap.appendChild(el('p', null, p)));
+    lensPanel.appendChild(bodyWrap);
+
+    lensPanel.appendChild(el('div', 'section-heading', 'Key Facts (Record-Sourced)'));
+    lensPanel.appendChild(renderFactsList(FACTS));
+    lensPanel.appendChild(el('div', 'section-heading', 'Governing Authorities'));
+    lensPanel.appendChild(renderFactsList(AUTHORITIES));
+
+    const badgeRow = el('div', 'badge-row');
+    badgeRow.appendChild(el('span', 'strength-badge', 'Strength: ' + STRENGTH.rank));
+    badgeRow.appendChild(el('span', 'strength-note', STRENGTH.note));
+    lensPanel.appendChild(badgeRow);
+
+    lensPanel.appendChild(el('div', 'section-heading', 'Your Notes \u2014 ' + lens.label + ' (type or dictate)'));
+    const textarea = document.createElement('textarea');
+    textarea.className = 'notesarea';
+    textarea.placeholder = 'Add your own notes for this lens...';
+    const status = el('div', 'notes-status', '');
+    const dictateRow = attachDictation(textarea, status, () => { scheduleNoteSave(issueLens, textarea, status); });
+    lensPanel.appendChild(dictateRow);
+    lensPanel.appendChild(textarea);
+    lensPanel.appendChild(status);
+    let saveTimer;
+    textarea.addEventListener('input', () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => saveNote(issueLens, textarea.value, status), 600); });
+    textarea.value = (await storageGet('issue1_notes_' + issueLens)) || '';
+
+    panel.appendChild(lensPanel);
+    panel.appendChild(el('div', 'footnote', 'Template built from Issue I. Additional issues can be added using this same structure.'));
+  }
+
+  function scheduleNoteSave(lens, textarea, status) { saveNote(lens, textarea.value, status); }
+  async function saveNote(lens, text, statusEl) {
+    const ok = await storageSet('issue1_notes_' + lens, text);
+    statusEl.textContent = ok ? 'Saved' : 'Could not save';
+    setTimeout(() => { statusEl.textContent = ''; }, 1500);
+  }
+
+  // ================= RENDER: VOICE LOG =================
+  function renderVoiceLog(panel) {
+    panel.appendChild(el('div', 'compat-note',
+      'Speech-to-text works in Chrome or Edge (desktop or Android). Short bursts drop straight in; for long dictation, keep talking \u2014 it keeps transcribing until you stop it. ' +
+      'Tag each entry once you\'re done, then triage it later into Case Foundation or an Issue tab.'));
+
+    const newEntryBox = el('div', 'voice-entry');
+    const textarea = document.createElement('textarea');
+    textarea.className = 'notesarea';
+    textarea.placeholder = 'Tap Dictate and start talking, or type directly...';
+    const status = el('div', 'notes-status', '');
+    const dictateRow = attachDictation(textarea, status);
+    newEntryBox.appendChild(el('div', null, '<strong>New Entry</strong>'));
+    newEntryBox.appendChild(dictateRow);
+    newEntryBox.appendChild(textarea);
+
+    const tagRow = el('div', 'dictate-row');
+    const tagSelect = document.createElement('select');
+    tagSelect.innerHTML = ['Untriaged','Case Foundation','Issue I - Attorney','Issue I - Judge','Issue I - Opposing Counsel','Findings Cross-Reference','General Note']
+      .map(t => `<option value="${t}">${t}</option>`).join('');
+    tagRow.appendChild(el('span', null, 'Tag: '));
+    tagRow.appendChild(tagSelect);
+    const saveBtn = el('button', 'dictate-btn', 'Save Entry');
+    saveBtn.onclick = async () => {
+      if (!textarea.value.trim()) return;
+      voiceLog.unshift({ id: Date.now(), text: textarea.value.trim(), tag: tagSelect.value, ts: new Date().toLocaleString() });
+      await saveVoiceLog();
+      textarea.value = '';
+      render();
+    };
+    tagRow.appendChild(saveBtn);
+    newEntryBox.appendChild(tagRow);
+    newEntryBox.appendChild(status);
+    panel.appendChild(newEntryBox);
+
+    panel.appendChild(el('div', 'section-heading', `Log (${voiceLog.length} entries)`));
+    if (voiceLog.length === 0) {
+      panel.appendChild(el('div', 'notes-status', 'No entries yet.'));
+    }
+    voiceLog.forEach(entry => {
+      const box = el('div', 'voice-entry');
+      const meta = el('div', 'meta');
+      meta.appendChild(el('span', null, entry.ts + ' \u2014 ' + entry.tag));
+      const delBtn = el('button', 'delete-btn', 'Delete');
+      delBtn.onclick = async () => { voiceLog = voiceLog.filter(e => e.id !== entry.id); await saveVoiceLog(); render(); };
+      meta.appendChild(delBtn);
+      box.appendChild(meta);
+      box.appendChild(el('div', null, entry.text));
+      panel.appendChild(box);
+    });
+  }
+
+  // ================= MAIN RENDER =================
+  async function render() {
+    const root = document.getElementById('root');
+    root.innerHTML = '';
+
+    const header = el('div', 'header');
+    header.appendChild(el('div', 'version', 'CASE TRACKER \u2014 v3 \u2014 July 22, 2026 \u2014 Foundation + Issue I + Voice Capture (deed timeline \u0026 filing-mechanics update)'));
+    header.appendChild(el('h1', null, 'Evich v. Stone \u2014 Case Command Center'));
+    header.appendChild(el('div', 'sub', 'Case No. 2024DR31793 (District Court) / 2026CA1119 (Court of Appeals)'));
+    root.appendChild(header);
+
+    const maintabs = el('div', 'maintabs');
+    const tabDefs = [ ['foundation','Case Foundation'], ['issue1','Issue I'], ['voice','Voice Capture Log'] ];
+    tabDefs.forEach(([key, label]) => {
+      const t = el('div', 'maintab' + (mainTab === key ? ' active' : ''), label);
+      t.onclick = () => { mainTab = key; render(); };
+      maintabs.appendChild(t);
+    });
+    root.appendChild(maintabs);
+
+    const panel = el('div', 'body-panel');
+    if (mainTab === 'foundation') renderFoundation(panel);
+    else if (mainTab === 'issue1') await renderIssue(panel);
+    else renderVoiceLog(panel);
+    root.appendChild(panel);
+  }
+
+  (async function init() {
+    await loadVoiceLog();
+    render();
+  })();
+</script>
+</body>
+</html>
