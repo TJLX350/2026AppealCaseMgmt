@@ -1,0 +1,2375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evich v. Stone — Case Command Center</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1F3864">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Evich Case Tracker">
+</head>
+<body>
+<div id="root"></div>
+<style>
+  :root {
+    --navy: #1F3864; --navy-light: #2E4E8C; --gold: #B08D57;
+    --green: #4C7A4C; --red: #A33A3A; --gray-bg: #F5F5F3;
+    --text: #23262B; --muted: #6B7076; --purple: #6B4C7A;
+  }
+  * { box-sizing: border-box; }
+  html { background: #0D1B2E; }
+  body { margin: 0; background: #0D1B2E; font-family: Georgia, 'Times New Roman', serif; color: var(--text); }
+  #root { max-width: 980px; margin: 0 auto; }
+
+  .header { background: var(--navy); color: white; padding: 20px 24px; border-radius: 8px 8px 0 0; }
+  .header .version { font-size: 12px; opacity: 0.75; font-family: Arial, sans-serif; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .header h1 { margin: 0 0 6px 0; font-size: 22px; }
+  .header .sub { font-size: 13px; opacity: 0.9; font-family: Arial, sans-serif; }
+  .title-row { display: flex; align-items: center; gap: 14px; }
+  .scales-icon { flex-shrink: 0; opacity: 0.9; }
+  .version-history { font-family: Arial, sans-serif; font-size: 10px; opacity: 0.6; margin-top: 8px; }
+
+  .maintabs { display: flex; gap: 4px; background: #111; padding: 0 12px; flex-wrap: wrap; }
+  .maintab { padding: 12px 18px; cursor: pointer; font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; color: #aaa; border-bottom: 3px solid transparent; }
+  .maintab.active { color: white; border-bottom: 3px solid var(--gold); }
+  .maintab:hover { color: white; }
+
+  .subtabs { display: flex; gap: 3px; background: var(--gray-bg); padding: 10px 24px 0 24px; border-left: 1px solid #ddd; border-right: 1px solid #ddd; flex-wrap: wrap; }
+  .subtab { padding: 8px 16px; cursor: pointer; font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; color: var(--muted); background: #E3E3DF; border: 1px solid #ccc; border-bottom: none; border-radius: 6px 6px 0 0; }
+  .subtab.active { background: var(--navy-light); color: white; border-color: var(--navy-light); }
+  .subtab:not(.active):hover { background: #d5d5d0; }
+
+  .body-panel { background: #fff; border: 1px solid #ddd; border-top: none; padding: 24px; border-radius: 0 0 8px 8px; }
+
+  .section-heading { font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin: 20px 0 10px 0; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+  .section-heading:first-child { margin-top: 0; }
+
+  table.ref { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 8px; }
+  table.ref th { background: var(--navy); color: white; font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase; padding: 8px; text-align: left; }
+  table.ref td { border: 1px solid #ddd; padding: 8px; vertical-align: top; line-height: 1.4; }
+  table.ref tr:nth-child(even) td { background: var(--gray-bg); }
+  .cite { font-family: Arial, sans-serif; font-size: 11px; color: var(--muted); background: #eee; padding: 1px 6px; border-radius: 3px; }
+  .flag { background: #fdecea; border-left: 3px solid var(--red); }
+  .discovery-badge { display: inline-block; background: var(--red); color: white; font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+
+  ul.plain { margin: 0; padding-left: 20px; }
+  ul.plain li { margin-bottom: 6px; line-height: 1.5; }
+
+  .relief-banner { background: var(--gold); color: white; font-family: Arial, sans-serif; padding: 14px 18px; border-radius: 8px; margin-bottom: 18px; font-size: 13px; line-height: 1.5; }
+  .relief-banner strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; opacity: 0.9; }
+
+  .tabs { display: flex; gap: 6px; padding: 16px 24px 0 24px; background: var(--gray-bg); border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
+  .tab { flex: 1; text-align: center; padding: 12px 8px; border-radius: 8px 8px 0 0; cursor: pointer; font-family: Arial, sans-serif; font-weight: bold; font-size: 13px; background: #E3E3DF; color: var(--muted); border: 1px solid #ccc; border-bottom: none; }
+  .tab.active.attorney { background: var(--navy); color: white; }
+  .tab.active.judge { background: var(--gold); color: white; }
+  .tab.active.opposing { background: var(--red); color: white; }
+  .tab.active.inversion { background: var(--purple); color: white; }
+  .tab:not(.active):hover { background: #d5d5d0; }
+  .panel { background: #fff; border: 1px solid #ddd; border-radius: 0 0 8px 8px; padding: 24px; }
+  .panel-label { font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 4px; }
+  .panel-label.attorney { color: var(--navy); } .panel-label.judge { color: var(--gold); } .panel-label.opposing { color: var(--red); } .panel-label.inversion { color: var(--purple); }
+  .panel-title { font-size: 18px; margin: 0 0 14px 0; }
+  .anchor { border-left: 4px solid; padding: 10px 16px; margin: 14px 0; background: var(--gray-bg); font-style: italic; font-size: 15px; }
+  .anchor.attorney { border-color: var(--navy); } .anchor.judge { border-color: var(--gold); } .anchor.opposing { border-color: var(--red); } .anchor.inversion { border-color: var(--purple); }
+  .badge-row { display: flex; gap: 10px; align-items: center; margin: 14px 0; font-family: Arial, sans-serif; flex-wrap: wrap; }
+  .strength-badge { display: inline-block; padding: 4px 14px; border-radius: 14px; font-weight: bold; font-size: 13px; color: white; background: var(--green); }
+  .strength-note { font-size: 12px; color: var(--muted); }
+
+  .dictate-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
+  .dictate-btn { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; background: var(--navy); color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .dictate-btn.listening { background: var(--red); }
+  .dictate-btn:disabled { background: #bbb; cursor: not-allowed; }
+  .dictate-btn.secondary { background: #666; }
+  .mic-dot { width: 8px; height: 8px; border-radius: 50%; background: white; }
+  .dictate-btn.listening .mic-dot { animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  textarea.notesarea { width: 100%; min-height: 60px; border: 1px solid #ccc; border-radius: 6px; padding: 10px; font-family: Arial, sans-serif; font-size: 13px; resize: vertical; }
+  input.notesinput { width: 100%; border: 1px solid #ccc; border-radius: 6px; padding: 8px 10px; font-family: Arial, sans-serif; font-size: 13px; }
+  .notes-status { font-family: Arial, sans-serif; font-size: 11px; color: var(--muted); margin-top: 4px; min-height: 14px; }
+
+  .voice-entry { border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 10px; background: var(--gray-bg); }
+  .voice-entry .meta { font-family: Arial, sans-serif; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 6px; }
+  .voice-entry select { font-family: Arial, sans-serif; font-size: 11px; }
+  .voice-entry .delete-btn { background: none; border: none; color: var(--red); cursor: pointer; font-family: Arial, sans-serif; font-size: 11px; }
+  .caught-eye { font-weight: bold; font-family: Arial, sans-serif; font-size: 13px; margin-bottom: 4px; color: var(--navy); }
+
+  .session-header { font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; color: white; background: var(--muted); padding: 4px 10px; border-radius: 4px; margin: 14px 0 6px 0; display: inline-block; }
+
+  .footnote { font-family: Arial, sans-serif; font-size: 11px; color: var(--muted); text-align: center; margin-top: 10px; }
+
+  .tag-group { margin: 10px 0; }
+  .tag-group-title { font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 6px; }
+  .chip-row, .chip-row-readonly { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip-row-readonly { margin-top: 8px; }
+  .chip { font-family: Arial, sans-serif; font-size: 11px; padding: 4px 10px; border-radius: 12px; border: 1px solid #ccc; background: #fff; color: var(--muted); cursor: pointer; user-select: none; }
+  .chip:hover { border-color: var(--navy); }
+  .chip.selected { background: var(--navy); color: white; border-color: var(--navy); }
+  .chip.small { cursor: default; background: var(--gray-bg); font-size: 10px; }
+  .chip.small:hover { border-color: #ccc; }
+  .chip.gate { background: #fff; border-color: var(--green); color: var(--green); }
+  .chip.bucket { background: #fff; border-color: var(--gold); color: var(--gold); }
+
+  .filter-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-family: Arial, sans-serif; font-size: 12px; margin-bottom: 8px; }
+  .filter-label { font-weight: bold; color: var(--muted); }
+  .filter-wrap select { font-family: Arial, sans-serif; font-size: 12px; padding: 3px 6px; border-radius: 4px; border: 1px solid #ccc; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; font-family: Arial, sans-serif; font-size: 12px; }
+  .form-field label { display: block; font-weight: bold; color: var(--muted); margin-bottom: 4px; font-size: 11px; text-transform: uppercase; }
+  .form-field select, .form-field input { width: 100%; padding: 6px 8px; border-radius: 4px; border: 1px solid #ccc; font-family: Arial, sans-serif; font-size: 12px; }
+
+  .master-mic-fab {
+    position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%;
+    background: var(--navy); color: white; border: none; font-size: 24px; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; display: flex; align-items: center; justify-content: center;
+  }
+  .master-mic-fab:hover { background: var(--navy-light); }
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1001; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal-box { background: #fff; border-radius: 10px; padding: 24px; max-width: 640px; width: 100%; max-height: 85vh; overflow-y: auto; position: relative; }
+  .modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted); font-family: Arial, sans-serif; }
+  .modal-close:hover { color: var(--red); }
+  .compat-note { font-family: Arial, sans-serif; font-size: 12px; color: var(--muted); background: var(--gray-bg); border-radius: 6px; padding: 10px; margin-bottom: 14px; }
+
+  .ledger-form { border: 1px solid #ddd; border-radius: 6px; padding: 14px; background: var(--gray-bg); margin-bottom: 16px; }
+  a.drive-link { color: var(--navy); font-family: Arial, sans-serif; font-size: 12px; }
+
+    .lane-wrap { position: relative; min-height: 460px; background: var(--navy); border-radius: 10px; border: 1px solid #16294A; display: flex; align-items: center; justify-content: center; }
+  .cover-image-wrap { position: relative; width: 100%; max-width: 980px; margin: 0 auto; border-radius: 10px; overflow: hidden; line-height: 0; }
+  .cover-image { width: 100%; height: auto; display: block; border-radius: 10px; }
+  .cover-zone { position: absolute; cursor: pointer; background: transparent; border-radius: 8px; transition: background 0.15s ease; z-index: 10; }
+  .cover-zone:hover { background: rgba(176, 141, 87, 0.15); }
+  .cover-zone:active { background: rgba(176, 141, 87, 0.3); }
+  .cover-content { max-width: 640px; }
+  .cover-title { font-family: Georgia, 'Times New Roman', serif; font-size: 40px; color: #fff; text-align: center; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .cover-eyebrow { font-family: Arial, sans-serif; font-size: 13px; color: #B08D57; text-align: center; letter-spacing: 2px; font-weight: bold; margin-bottom: 10px; }
+  .cover-tagline { font-family: Georgia, serif; font-style: italic; font-size: 15px; color: #C8D2E0; text-align: center; margin-bottom: 18px; }
+  .cover-select-line { font-family: Arial, sans-serif; font-size: 11px; color: #C8D2E0; text-align: center; letter-spacing: 1.5px; margin-bottom: 24px; opacity: 0.85; }
+  .cover-select-line span { color: #B08D57; }
+  .cover-door { display: flex; flex-direction: column; position: relative; }
+  .cover-door-icon { display: flex; justify-content: center; margin-bottom: 6px; }
+  .cover-chevron { position: absolute; bottom: 10px; right: 14px; color: #B08D57; font-size: 18px; font-weight: bold; }
+  .cover-footer { display: flex; justify-content: center; gap: 36px; flex-wrap: wrap; background: #0d1a30; border-radius: 0 0 10px 10px; padding: 16px 20px; margin-top: -1px; border: 1px solid #16294A; border-top: none; }
+  .cover-footer-item { display: flex; align-items: flex-start; gap: 8px; max-width: 220px; }
+  .cover-footer-icon { flex-shrink: 0; margin-top: 2px; }
+  .cover-footer-title { font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; color: #fff; letter-spacing: 0.5px; }
+  .cover-footer-sub { font-family: Arial, sans-serif; font-size: 11px; color: #9fb0c8; margin-top: 2px; }
+  @media (max-width: 600px) {
+    .cover-title { font-size: 28px; }
+    .cover-footer { gap: 16px; }
+    .cover-footer-item { max-width: 100%; }
+  }
+  .lane-icon { margin-bottom: 8px; opacity: 0.95; }
+  .lane-content { position: relative; z-index: 2; text-align: center; padding: 40px 20px; width: 100%; max-width: 640px; }
+  .lane-title { font-family: Georgia, serif; font-size: 28px; color: white; margin-bottom: 6px; letter-spacing: 0.3px; }
+  .lane-sub { font-family: Arial, sans-serif; font-size: 13px; color: #C8D2E0; margin-bottom: 28px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .lane-doors { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .lane-door { background: rgba(255,255,255,0.96); border-radius: 8px; border: 1px solid #D9C9A8; padding: 20px 12px; cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+  .lane-door:hover { transform: translateY(-3px); border-color: var(--gold); }
+  .lane-door-icon { font-size: 30px; margin-bottom: 8px; }
+  .lane-door-title { font-family: Georgia, serif; font-size: 16px; font-weight: bold; color: var(--navy); margin-bottom: 4px; }
+  .lane-door-sub { font-family: Arial, sans-serif; font-size: 11px; color: var(--muted); }
+  .change-lane { font-family: Arial, sans-serif; font-size: 11px; color: white; opacity: 0.75; cursor: pointer; margin-top: 4px; }
+  .change-lane:hover { opacity: 1; text-decoration: underline; }
+  @media (max-width: 600px) {
+    .lane-doors { grid-template-columns: 1fr; }
+    .lane-title { font-size: 24px; }
+  }
+  .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 8px; }
+  .table-scroll table.ref { min-width: 480px; margin-bottom: 0; }
+  .copy-btn { background: none; border: 1px solid #ccc; color: var(--muted); font-family: Arial, sans-serif; font-size: 10px; padding: 1px 6px; border-radius: 3px; cursor: pointer; margin-left: 6px; }
+  .copy-btn:hover { border-color: var(--navy); color: var(--navy); }
+
+  @media (max-width: 700px) {
+    #root { max-width: 100%; }
+    .header { padding: 14px 14px; border-radius: 0; }
+    .header h1 { font-size: 18px; }
+    .title-row { gap: 8px; }
+    .scales-icon svg { width: 30px; height: 30px; }
+    .maintab { padding: 10px 12px; font-size: 12px; }
+    .subtab { padding: 6px 10px; font-size: 11px; }
+    .body-panel { padding: 14px; border-radius: 0; }
+    .form-grid { grid-template-columns: 1fr; }
+    .tabs { padding: 12px 14px 0 14px; }
+    .tab { font-size: 11px; padding: 10px 4px; }
+    .master-mic-fab { width: 48px; height: 48px; font-size: 20px; bottom: 16px; right: 16px; }
+    .modal-box { padding: 16px; max-width: 100%; }
+    .filter-row { gap: 8px; }
+    .version-history { font-size: 9px; }
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    .master-mic-fab { bottom: 10px; right: 10px; width: 44px; height: 44px; font-size: 18px; }
+    .modal-box { max-height: 92vh; }
+  }
+  #root.wide-view { max-width: 100%; }
+  .landscape-toggle-btn { font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; background: transparent; color: white; border: 1px solid rgba(255,255,255,0.5); border-radius: 5px; padding: 4px 10px; cursor: pointer; margin-left: 10px; }
+  .landscape-toggle-btn.active { background: var(--gold); border-color: var(--gold); color: white; }
+  .landscape-toggle-btn:hover { border-color: var(--gold); }
+</style>
+
+<script>
+  // ================= CASE DATA (verified) =================
+  const CASE_INFO = {
+    caseNo: "2024DR31793", court: "Arapahoe County District Court, Division 11",
+    apCaseNo: "2026CA1119",
+    hearingJudge: "Michelle Elizabeth Jones \u2014 trial/hearing judge; issued Dec. 4, 2025 Final Order and Apr. 21, 2026 Rule 59 Order",
+    caseMgmtJudge: "Christine Alexandra Washburn \u2014 judicial officer for bifurcation, discovery rulings, and Apr. 23, 2026 order",
+    petitioner: "Deanna Dawn Evich (Pro Se as of Rule 59 stage)",
+    respondent: "Lisa Gay Stone",
+    petCounselHistory: [
+      { date: "10/27/2024", text: "Joseph Antolinez (Antolinez Miller LLC) begins representing Petitioner." },
+      { date: "12/12/2024 \u2013 6/20/2025", text: "Antolinez fights for and wins a full-day hearing (originally set as half-day)." },
+      { date: "6/27/2025, 3:55 PM", text: "Substitution of Counsel filed \u2014 The Law Office of Alexandra White, PC takes over." },
+      { date: "6/27/2025 \u2013 8/22/2025", text: "No visible White filings for ~8 weeks (docket gap)." },
+      { date: "12/18/2025", text: "White files Motion to Withdraw \u2014 same day Petitioner's Rule 59 deadline expires." },
+      { date: "1/6/2026", text: "Withdrawal granted." },
+      { date: "2/17/2026 \u2013 present", text: "Petitioner proceeds Pro Se." }
+    ],
+    respCounselHistory: [
+      { date: "11/15/2024 \u2013 1/20/2025", text: "Lauren Makayla Romero (Rider Goodwin Law Offices LLC) represents Respondent." },
+      { date: "4/16/2025", text: "Romero formally withdraws as attorney (same firm continues)." },
+      { date: "12/30/2024 \u2013 present", text: "Kelley Rider Goodwin, same firm, primary counsel at District Court." },
+      { date: "6/26/2026", text: "Sharlene J. Aitken, Aitken Law LLC, enters for the Appeal." }
+    ],
+    respCounsel: "Kelley Rider Goodwin, Rider Goodwin Law Offices (district court) / Sharlene J. Aitken, Aitken Law LLC (appeal, entered 6/26/26)",
+    staffCaveat: "Both parties' attorneys had staff/paralegals (e.g., legal assistants handling filings and correspondence) who may have performed some drafting or filing work. Specific authorship of any given document is not always determinable from the record alone \u2014 attribute to the filing attorney of record unless independently confirmed otherwise.",
+    caseType: "Same-sex, common-law Dissolution of Marriage \u2014 relationship alleged 1996\u2013Oct. 27, 2024"
+  };
+
+  const RELIEF_SOUGHT = "Reversal, with the marital estate identified and valued as of the October 27, 2024 Petition filing date \u2014 so that no property or beneficiary designation changes made during litigation affect the marital estate determination.";
+
+  const JTMC_FACTS = [
+    { text: "Petitioner designated as primary beneficiary on three real properties (Chenango Place, El Toro Way, Ski Hill Road).", cite: "JTMC \u00b6\u00b6 I, J, K" },
+    { text: "Spousal health insurance coverage arrangement.", cite: "JTMC \u00b6 H" },
+    { text: "Continued cohabitation confirmed post-2015.", cite: "JTMC \u00b6 C" },
+    { text: "IRA beneficiary designations.", cite: "JTMC \u00b6\u00b6 L, P" }
+  ];
+
+  const TIMELINE = [
+    { date: "10/27/2024", event: "Petition for Dissolution of Marriage filed." },
+    { date: "10/28/2024", event: "Respondent personally served." },
+    { date: "11/15/2024", event: "Respondent's Response filed, contesting common-law marriage." },
+    { date: "1/21/2025", event: "Judge Washburn orders stay of Rule 16.2 financial disclosures pending marriage determination." },
+    { date: "2/27/2025", event: "Undisclosed beneficiary deed change (reversed 3/26/2025)." },
+    { date: "4/30/2025", event: "Judge Washburn denies Petitioner's Motion to Compel financial discovery." },
+    { date: "6/25/2025", event: "Attorney Joseph Antolinez's representation ends." },
+    { date: "6/27/2025", event: "Attorney Alexandra White enters as substitute counsel." },
+    { date: "10/24/2025", event: "Joint Trial Management Certificate (JTMC) filed \u2014 stipulated facts." },
+    { date: "10/28/2025", event: "Full-day evidentiary hearing before Judge Jones." },
+    { date: "12/4/2025", event: "Final Order: no marriage found; petition dismissed with prejudice. (Findings 52 and 83 as originally entered.)" },
+    { date: "12/18/2025", event: "Motion for Extension of Time to file Rule 59 motion; Alexandra White files motion to withdraw same day." },
+    { date: "2/4/2026", event: "Second undisclosed beneficiary deed change (Chenango Place only), during Rule 59 pendency \u2014 not reversed." },
+    { date: "2/17/2026", event: "Petitioner's Rule 59 Motion for Post-Trial Relief filed, pro se." },
+    { date: "3/31/2026", event: "Petitioner files Notice of Asset Designation Changes (Filing ID BBE04964FFF24), documenting both the 2/27/25 and 2/4/26 deed changes." },
+    { date: "3/31 \u2192 4/21/2026", event: "21 days pass \u2014 no response from Respondent, no ruling from either judge on the Notice.", flag: true },
+    { date: "4/21/2026, 12:32 PM", event: "Judge Jones GRANTS IN PART Rule 59 motion \u2014 corrects Finding 52 and Finding 51; calls Finding 52 change a 'clerical error' and both changes 'minor amendments.'" },
+    { date: "4/21/2026, 8:52 PM", event: "Respondent's Response/Objection to the Notice AND an unsigned proposed order striking the Notice are both filed under the SAME Filing ID (CEB18BE48151A). Her defense covers only the 2/4/26 change; the 2/27/25 change is called 'irrelevant' with no defense offered.", flag: true },
+    { date: "4/23/2026", event: "Judge Washburn's actual signed order states Court 'TAKES NO ACTION' and characterizes the Rule 59 motion as 'denied' \u2014 conflicting with both the proposed order's 'strikes/denies' language and with Jones's actual 'granted in part' ruling.", flag: true },
+    { date: "~1/6/2026", event: "Alexandra White's motion to withdraw granted (approximate)." },
+    { date: "6/9/2026", event: "Notice of Appeal filed; Court of Appeals case 2026CA1119 opened." }
+  ];
+
+  const FINDINGS_XREF = [
+    {
+      topic: "Beneficiary designation on 3 properties (Chenango Place, El Toro Way, Ski Hill Road)",
+      rows: [
+        { source: "Finding 52 (ORIGINAL, 12/4/25)", text: "\u201cEach revocable beneficiary deed designated Respondent as grantee-beneficiary with Respondent's son...as successor grantee-beneficiary.\u201d \u2014 omits Petitioner entirely.", cite: "Order, 12/4/2025" },
+        { source: "Finding 83 (SAME ORDER, 12/4/25)", text: "Lists as a totality factor: \u201cbeneficiary designations by Respondent in favor of Petitioner.\u201d \u2014 directly contradicts Finding 52 in the SAME order, before any correction.", cite: "Order, 12/4/2025, Finding 83", flagRow: true, discovery: true },
+        { source: "JTMC Stipulation", text: "Petitioner designated primary beneficiary on all three properties \u2014 stipulated by both parties.", cite: "JTMC \u00b6\u00b6 I, J, K" },
+        { source: "Exhibit 48", text: "Recorded 2010 beneficiary deed language naming Petitioner as grantee-beneficiary on all three properties.", cite: "Admitted Ex. 48, pp.1-3" },
+        { source: "Finding 52 (CORRECTED, Rule 59 Order, 4/21/26)", text: "\u201cEach revocable beneficiary deed...designated Petitioner as grantee-beneficiary with Respondent's son...as successor.\u201d \u2014 now matches JTMC, Exhibit 48, AND Finding 83.", cite: "Rule 59 Order, 4/21/2026" },
+        { source: "Court's Characterization", text: "\u201cFinding 52 entered by the Court contained a clerical error.\u201d Then, collectively with Finding 51's correction: \u201cThese minor amendments to the Court's findings do not necessitate any amendment of judgment...\u201d", cite: "Rule 59 Order, 4/21/2026", flagRow: true }
+      ]
+    },
+    {
+      topic: "Petitioner's employment status, 2006",
+      rows: [
+        { source: "Finding 38 (12/4/25, unchanged)", text: "Petitioner \u201cacted as a realtor and contributed what would have been her commission fees\u201d at the March 2006 Chenango Place purchase.", cite: "Order, 12/4/2025" },
+        { source: "Finding 51 (ORIGINAL, 12/4/25)", text: "\u201cAt the time of the declaration [Aug. 2006], Petitioner was unemployed.\u201d \u2014 directly inconsistent with Finding 38, same order.", cite: "Order, 12/4/2025", flagRow: true },
+        { source: "Exhibit 40", text: "Colorado real estate license held Nov. 2004 through Nov. 2016.", cite: "Admitted Ex. 40" },
+        { source: "Exhibit 56", text: "March 2006 commission of $7,889 gross / $5,522 net on unrelated Chenango Place transaction.", cite: "Admitted Ex. 56, pp.1-4" },
+        { source: "Finding 51 (CORRECTED, Rule 59 Order, 4/21/26)", text: "\u201cPetitioner was working as a real estate agent earning minimum income\u201d at the time of the Aug. 2006 declaration.", cite: "Rule 59 Order, 4/21/2026" }
+      ]
+    },
+    {
+      topic: "Beneficiary deed changes during litigation \u2014 two occasions, one undefended",
+      rows: [
+        { source: "Petitioner's Notice (filed 3/31/2026)", text: "Documents TWO deed-change occasions: (1) 2/27/2025 \u2014 Chenango Place AND Grand Lodge/Ski Hill Rd, both undisclosed in 2/28/2025 discovery, restored 3/26/2025; (2) 2/4/2026 \u2014 Chenango Place only, during Rule 59 pendency, not disclosed, not reversed (Doc. E6007094).", cite: "Notice, Filing ID BBE04964FFF24, 3/31/2026" },
+        { source: "Respondent's Response \u00b6\u00b6 6\u20139 (4/21/2026)", text: "Builds a legal defense ONLY for the 2/4/2026 change: ATI terminated upon 12/4/2025 dismissal (\u00a7 14-10-107(4)(b)); beneficiary deeds freely revocable (\u00a7 15-15-402).", cite: "Response, 4/21/2026" },
+        { source: "Respondent's Response \u00b6 11 (4/21/2026)", text: "On the 2/27/2025 change \u2014 offers NO legal defense. Instead argues it is a 'separate historical event... not properly before the Court' and 'irrelevant.' Never disputes the underlying facts.", cite: "Response \u00b6 11, 4/21/2026", flagRow: true, discovery: true },
+        { source: "Asymmetry", text: "The ATI-termination defense (\u00a76) cannot reach the 2/27/2025 change \u2014 the case was still fully open, months before trial. No alternate defense is offered for it. The silence functions as a tacit concession that the earlier change had no lawful justification.", cite: "Analysis", flagRow: true, discovery: true }
+      ]
+    },
+    {
+      topic: "Same-day filing mechanics \u2014 Objection and proposed order",
+      rows: [
+        { source: "Respondent's Response and Objection", text: "Filed 4/21/2026, 8:52 PM \u2014 Filing ID CEB18BE48151A.", cite: "Response, 4/21/2026" },
+        { source: "\u201cOrder re Notice of Asset Designation Changes\u201d", text: "Filed 4/21/2026, 8:52 PM \u2014 SAME Filing ID CEB18BE48151A. Signature line and date line both blank \u2014 appears to be Respondent's own proposed order, submitted with her Objection, never judicially signed.", cite: "Proposed Order, 4/21/2026", flagRow: true, discovery: true },
+        { source: "Judge Washburn's actual signed order (4/23/2026)", text: "\u201cThe Court TAKES NO ACTION on these pleadings.\u201d \u2014 does not match the proposed order's \u201cSTRIKES...DENIES\u201d language. No signed order appears to have adopted the strike/deny outcome.", cite: "Order, 4/23/2026", flagRow: true }
+      ]
+    },
+    {
+      topic: "Characterization of the Rule 59 outcome, across two judicial officers",
+      rows: [
+        { source: "Judge Jones, Rule 59 Order (4/21/2026)", text: "\u201cThe Court hereby, GRANTS in part the requests as follows...\u201d", cite: "Rule 59 Order, 4/21/2026" },
+        { source: "Judge Washburn, Order (4/23/2026)", text: "\u201cThe Court TAKES NO ACTION on these pleadings. The Court denied Petitioner's Motion for Post-Trial Relief.\u201d \u2014 mischaracterizes the 4/21 ruling as a denial when it was granted in part.", cite: "Order re: Asset Designation, 4/23/2026", flagRow: true, discovery: true }
+      ]
+    }
+  ];
+
+  // ================= ISSUE I: LAW / FACT / APPLICATION / CONCLUSION =================
+  const ISSUE = {
+    title: "Issue I",
+    statement: "Whether the trial court committed reversible error by altering a material stipulated fact from the Joint Trial Management Certificate (Finding 52), adjudicating the case on the altered factual foundation, and refusing to reweigh the Hogsett totality-of-the-circumstances test on the corrected record.",
+    standardOfReview: "Factual findings are reviewed for <strong>clear error</strong>; the application of the Hogsett legal standard to the facts is reviewed <strong>de novo</strong>. <span class='cite'>Hogsett v. Neale, 478 P.3d 713, 719 (Colo. 2021)</span>"
+  };
+
+  const LAW_TEXT = [
+    "Under Hogsett v. Neale, 478 P.3d 713 (Colo. 2021), and LaFleur v. Pyfer, 479 P.3d 869 (Colo. 2021), a trial court has a mandatory, non-discretionary duty to evaluate the totality of the circumstances in determining whether a common-law marriage exists.",
+    "No single factor is dispositive, but every factor identified in the record \u2014 including testamentary and estate-planning designations \u2014 must actually be weighed together, not selectively credited or discounted.",
+    "For couples together before marriage equality, LaFleur holds that conduct is the primary evidence of marital intent, since legal marriage was unavailable to them at the time.",
+    "The application of this legal standard to the facts of a case is a mixed question of law and fact, reviewed de novo on appeal \u2014 the trial court's discretion does not extend to whether the mandatory totality analysis is actually performed."
+  ];
+
+  const FACTS = [
+    { text: "JTMC stipulated that Petitioner was designated primary beneficiary on three properties.", cite: "JTMC \u00b6\u00b6 I, J, K" },
+    { text: "Original Finding 52 (12/4/2025) omitted Petitioner and instead named Respondent/her son as beneficiary \u2014 contradicting the stipulation.", cite: "Order, 12/4/2025" },
+    { text: "Finding 83, in the SAME 12/4/2025 order, already lists \u201cbeneficiary designations by Respondent in favor of Petitioner\u201d as a totality factor \u2014 directly inconsistent with Finding 52 as originally written.", cite: "Order, 12/4/2025, Finding 83" },
+    { text: "Corrected Finding 52 (Rule 59 Order) restores Petitioner as primary grantee-beneficiary, now matching Finding 83, the JTMC, and Exhibit 48. The court characterized this as a 'clerical error,' and collectively with Finding 51's correction, as 'minor amendments.'", cite: "Rule 59 Order, 4/21/2026" },
+    { text: "The beneficiary deed bundle (Will, Beneficiary Deeds, Power of Attorney) is a revocable instrument reflecting estate-planning/inheritance intent, not a current property transfer.", cite: "Admitted Ex. 48 (final numbering); C.R.S. \u00a7 15-15-402" },
+    { text: "Related contradiction: Finding 38 recognizes an active real estate license and commission-earning work in March 2006, while Finding 51 (original) characterized Petitioner as 'unemployed' in August 2006 \u2014 corrected on Rule 59.", cite: "Order Finding 38; Finding 51" },
+    { text: "Two additional undisclosed beneficiary-deed changes occurred during litigation: 2/27/2025 (reversed 3/26/2025) and 2/4/2026, during Rule 59 pendency.", cite: "Doc. No. E6007094" },
+    { text: "Judge Washburn's 4/23/2026 order characterizes the Rule 59 motion as having been 'denied,' when Judge Jones's 4/21/2026 order actually granted it in part.", cite: "Order, 4/23/2026" }
+  ];
+
+  const LEGAL_AUTHORITIES_TABLE = [
+    { authority: "Hogsett v. Neale, 478 P.3d 713 (Colo. 2021)", holding: "Establishes the totality-of-the-circumstances test for common-law marriage; no single factor is dispositive, but all identified factors must be weighed together.", usedIn: "Issue I (Law, Application)" },
+    { authority: "LaFleur v. Pyfer, 479 P.3d 869 (Colo. 2021)", holding: "For couples together before marriage equality, conduct is the primary evidence of marital intent since legal marriage was unavailable to them.", usedIn: "Issue I (Law); Case Foundation" },
+    { authority: "People v. Lucero, 747 P.2d 660 (Colo. 1987)", holding: "Prior common-law marriage factors (cohabitation, reputation, joint accounts, etc.) remain relevant but must be assessed in context, per Hogsett.", usedIn: "Trial court's Conclusions of Law" },
+    { authority: "Shtutman v. Dareuskaya, 478 P.3d 732 (Colo. 2021)", holding: "Companion case to Hogsett addressing common-law marriage totality analysis.", usedIn: "Cited in trial court's Dec. 4, 2025 Order" },
+    { authority: "C.R.C.P. 59", holding: "Governs post-trial motions for amendment of findings, amendment of judgment, or new trial; 14-day filing window (extendable).", usedIn: "Rule 59 Motion, Feb. 17, 2026" },
+    { authority: "C.R.S. \u00a7 14-10-107(4)(b)", holding: "Automatic Temporary Injunction (ATI) provision; governs when the injunction terminates relative to dismissal.", usedIn: "Beneficiary deed changes analysis (Findings Cross-Reference)" },
+    { authority: "C.R.S. \u00a7 15-15-402", holding: "Revocable beneficiary deeds are non-probate transfer instruments, effective only upon the owner's death; freely revocable during the owner's lifetime.", usedIn: "Issue I (Law, Application); Exhibit 48 characterization" },
+    { authority: "C.R.S. \u00a7 13-17-102", holding: "Governs attorney fee awards where an action or defense lacks substantial justification (frivolous, groundless, or vexatious).", usedIn: "Respondent's fee request, Response & Objection, 4/21/2026" },
+    { authority: "C.A.R. 3.4 / C.A.R. 10", holding: "Governs designation of the record and transcripts on appeal; 7-day deadline from Notice of Appeal for transcript designation.", usedIn: "Appeal procedural compliance (filed 6/15/2026)" },
+    { authority: "C.A.R. 31", holding: "Governs briefing deadlines: Opening Brief due 42 days after record filed; Answer Brief due 35 days after Opening Brief; optional Reply Brief due 21 days after Answer Brief.", usedIn: "Appeal Requirements & Deadlines" }
+  ];
+
+  const AUTHORITIES = [
+    { text: "Testamentary designations and estate-planning instruments reflecting a committed relationship are a named Hogsett totality factor; no single factor is dispositive.", cite: "Hogsett, 478 P.3d at 721\u201324" },
+    { text: "For same-sex couples before marriage equality, conduct is primary evidence of marital intent because legal marriage was unavailable.", cite: "LaFleur v. Pyfer, 479 P.3d 869, 874\u201375 (Colo. 2021)" }
+  ];
+
+  const CONCLUSION_TEXT = [
+    "Having formally amended two of the factual pillars underlying its totality analysis \u2014 Petitioner's employment status and her status as primary beneficiary on three properties \u2014 the trial court was required to reweigh the totality of the circumstances on the corrected record.",
+    "A court cannot alter the underlying facts feeding a mandatory legal standard while declining to recalculate the standard's result.",
+    "The trial court's characterization of these corrections as \u201cminor amendments\u201d that \u201cdo not necessitate any amendment of judgment\u201d \u2014 without reweighing the totality of the circumstances in light of them \u2014 constitutes legal error reviewable de novo, not a discretionary call entitled to deference.",
+    "The judgment should be reversed and the totality analysis reweighed on the corrected record, with the marital estate identified as of the October 27, 2024 filing date."
+  ];
+
+  const LENSES = {
+    attorney: {
+      label: "Attorney", panelTitle: "Framing the strongest version of this issue",
+      anchor: "The trial court corrected the very fact it relied upon, then adjudicated the case as if it had not.",
+      body: [
+        "Lead with the self-contradiction, not the later correction: Finding 83, in the very same order, already weighed \u201cbeneficiary designations by Respondent in favor of Petitioner\u201d as a totality factor \u2014 while Finding 52, two pages earlier in that same order, said the opposite.",
+        "This reframes 'clerical error' and 'minor amendments' as legally untenable characterizations: Hogsett does not permit a court to declare a totality factor 'minor' without reweighing.",
+        "Anchor materiality in the beneficiary deed's correct legal character: a revocable beneficiary deed under C.R.S. \u00a7 15-15-402 (Admitted Ex. 48, final numbering) is an estate-planning instrument, not a transfer of present ownership \u2014 Respondent named Petitioner ahead of her own biological son for over a decade.",
+        "Because applying Hogsett to the corrected facts is a legal question, the court's failure to reweigh is reviewable de novo."
+      ]
+    },
+    judge: {
+      label: "Judge", panelTitle: "Where a skeptical panel pushes back",
+      anchor: "If Finding 83 already reflected the true fact, doesn't that show the error was harmless?",
+      body: [
+        "A panel may read Finding 83 as proof the error was harmless rather than material \u2014 this must be answered directly, not left as an implicit inference.",
+        "The panel may ask why the trial court's own characterization of its correction as 'minor' isn't itself a permissible exercise of judgment about materiality.",
+        "Preservation risk: did the Rule 59 briefing raise the Finding 52/83 internal contradiction specifically, or only the JTMC/Exhibit 48 contradiction?",
+        "The Washburn 4/23 mischaracterization may be seen as an isolated slip in a separate order rather than evidence bearing on this issue directly."
+      ]
+    },
+    opposing: {
+      label: "Opposing Counsel", panelTitle: "The steelman rebuttal to expect",
+      anchor: "Finding 83 shows the court weighed the correct fact and still ruled against Petitioner.",
+      body: [
+        "Respondent will argue Finding 83 defeats Petitioner's position: the court already considered the true beneficiary fact and the totality still weighed against marriage.",
+        "Respondent will argue 'clerical error' and 'minor amendments' are the trial court's own permissible characterization, entitled to deference.",
+        "Respondent will argue waiver if the Finding 52/83 contradiction was not specifically raised below.",
+        "Respondent will characterize the Washburn 4/23 order's 'denied' language as a clerical slip with no bearing on this issue."
+      ]
+    },
+    inversion: {
+      label: "Inversion", panelTitle: "Following the other side's own premise to where it actually leads",
+      anchor: "If these corrections were truly minor, they were equally minor when the court got them backward the first time.",
+      body: [
+        "Respondent's own label \u2014 'minor amendments' \u2014 is the trap: if changing who was named beneficiary on three properties and whether Petitioner was employed are truly minor, then the original wrong findings were equally minor when entered, meaning a marriage determination was built in part on facts the court itself now says didn't matter enough to revisit.",
+        "Respondent's counsel argued at trial that Petitioner 'tries to use my client's generosity as a sword' and that 'generosity or caretaking alone is not enough.' Inverted: if care and generosity are truly neutral, as Respondent's own closing argument insists, then the trial court's reliance on that same caretaking framing as evidence against marital intent used a neutral factor as one-directional proof of a predetermined result \u2014 an inconsistency built entirely from Respondent's own words.",
+        "Either the corrected facts mattered \u2014 in which case reweighing was required \u2014 or they did not \u2014 in which case they should never have anchored a judgment dismissing a nearly three-decade relationship with prejudice in the first place. Respondent's position has no safe place to stand between those two outcomes."
+      ]
+    }
+  };
+
+  const STRENGTH = { rank: "A", note: "Strengthened by the Finding 83 self-contradiction, but the harmless-error and preservation questions above must be answered head-on to hold up." };
+
+  // ================= CBA FEE ARBITRATION (Evich v. White) =================
+  const CBA_INFO = {
+    caseRef: "Evich v. White (CBA Legal Fee Arbitration and Mediation Committee)",
+    party: "Deanna Evich", attorneyParty: "Alexandra White, Esq., Law Office of Alexandra White, PC",
+    arbitrator: "Patricia \"Trish\" Riley (The W Law)", arbitratorParalegal: "Vickie M. Vetter (The W Law)",
+    hearingDate: "October 9, 2026, 9:00 AM, via Zoom",
+    keyDeadlines: "Position Statement/Witness List/Exhibit List/Exhibits due 9/25/26; Response to other party's Position Statement + supplemental exhibits due 10/2/26",
+    exhibitLabeling: "Deanna's exhibits: numbers. White's exhibits: letters."
+  };
+  const CBA_STATEMENT = "Whether the fees charged by the Law Office of Alexandra White, PC ($87,230.10 billed) were reasonable given that prior counsel had already brought the case to trial-ready posture (~$16,340.25) and given the substantial gap in case activity between substitution and late August.";
+
+  // Confirmed in writing 5/4/2026 (Vickie M. Vetter, The W Law, email to Dee Adams, cc Alex White & Patricia Riley)
+  const CBA_SERVICE_MECHANICS = {
+    method: "ShareFile \u2014 each side has their own unique upload link. Vickie Vetter (arbitrator Patricia Riley's paralegal, The W Law) receives uploads and relays them to the other side. Not email, not mail, not direct-to-opposing-party.",
+    yourLink: "https://thewlaw.sharefile.com/rr452d3d38dca84fe5a733aaa2df75d64a",
+    labeling: "Your exhibits: numbers, matched to your Exhibit List. White's exhibits: letters.",
+    confirmedSource: "Email chain 5/4/2026, 11:08 AM (Vetter) and 11:56 AM (Vetter, confirming Dee's 11:54 AM restatement was \u2018perfectly correct\u2019)."
+  };
+
+  const CBA_DEADLINES = [
+    {
+      date: "2026-09-25",
+      label: "Position Statement, Witness List, Exhibit List, Exhibits",
+      items: [
+        "Position Statement",
+        "Witness List",
+        "Exhibit List",
+        "Exhibits (numbered to match your Exhibit List)",
+        "Upload all of the above via your ShareFile link"
+      ]
+    },
+    {
+      date: "2026-10-02",
+      label: "Response to White's Position Statement + any supplemental exhibits",
+      items: [
+        "Response to White's Position Statement",
+        "Any supplemental exhibits (must be provided by this date if used)",
+        "Upload via your ShareFile link"
+      ]
+    }
+  ];
+
+  function getNextCBADeadline() {
+    const now = new Date();
+    for (const d of CBA_DEADLINES) {
+      const due = new Date(d.date + 'T23:59:59');
+      if (due >= now) return { deadline: d, daysLeft: Math.ceil((due - now) / (1000*60*60*24)) };
+    }
+    return { deadline: null, daysLeft: null };
+  }
+
+  function cbaUrgencyStyle(daysLeft) {
+    if (daysLeft === null) return { bg: '#E3E3DF', fg: '#23262B', weight: 'normal', pulse: false, label: 'No further CBA deadlines on record.' };
+    if (daysLeft < 0) return { bg: '#4a0e0e', fg: '#ffffff', weight: 'bold', pulse: true, label: 'PAST DUE by ' + Math.abs(daysLeft) + ' day' + (Math.abs(daysLeft) === 1 ? '' : 's') };
+    if (daysLeft > 30) return { bg: '#E3E3DF', fg: '#23262B', weight: 'normal', pulse: false, label: daysLeft + ' days remaining' };
+    // 30 -> 0: pale pink to deep red, bolder as it closes in
+    const t = Math.min(1, Math.max(0, (30 - daysLeft) / 30));
+    const start = [253, 214, 220]; // pale pink at day 30
+    const end = [122, 15, 15];     // deep red at day 0
+    const rgb = start.map((s, i) => Math.round(s + (end[i] - s) * t));
+    const bg = 'rgb(' + rgb.join(',') + ')';
+    const fg = t > 0.55 ? '#ffffff' : '#5a1a1a';
+    const weight = t > 0.75 ? '900' : (t > 0.4 ? 'bold' : '600');
+    const pulse = daysLeft <= 3;
+    return { bg, fg, weight, pulse, label: daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' remaining' };
+  }
+
+  function renderCBACountdownBanner(panel) {
+    const { deadline, daysLeft } = getNextCBADeadline();
+    const style = cbaUrgencyStyle(daysLeft);
+    const banner = el('div', null);
+    banner.style.border = '1px solid #ccc';
+    banner.style.borderRadius = '8px';
+    banner.style.padding = '14px 18px';
+    banner.style.marginBottom = '16px';
+    banner.style.background = style.bg;
+    banner.style.color = style.fg;
+    banner.style.fontFamily = 'Arial, sans-serif';
+    banner.style.transition = 'background 0.3s ease';
+    if (style.pulse) banner.style.animation = 'pulse 1.2s infinite';
+
+    const topLine = el('div', null);
+    topLine.style.fontSize = '11px';
+    topLine.style.textTransform = 'uppercase';
+    topLine.style.letterSpacing = '0.5px';
+    topLine.style.opacity = '0.85';
+    topLine.textContent = deadline ? 'Next CBA Deadline \u2014 ' + deadline.date : 'CBA Deadlines';
+    banner.appendChild(topLine);
+
+    const countLine = el('div', null, style.label);
+    countLine.style.fontSize = '20px';
+    countLine.style.fontWeight = style.weight;
+    countLine.style.margin = '4px 0 8px 0';
+    banner.appendChild(countLine);
+
+    if (deadline) {
+      const dueFor = el('div', null, '<strong>Due:</strong> ' + deadline.label);
+      dueFor.style.fontSize = '13px';
+      dueFor.style.marginBottom = '8px';
+      banner.appendChild(dueFor);
+
+      const checklist = el('ul', 'plain');
+      checklist.style.marginBottom = '8px';
+      deadline.items.forEach(item => checklist.appendChild(el('li', null, item)));
+      banner.appendChild(checklist);
+    }
+
+    const serviceLine = el('div', null,
+      '<strong>How to submit:</strong> ' + CBA_SERVICE_MECHANICS.method +
+      ' &nbsp;<span class="cite">Confirmed 5/4/2026 email</span>');
+    serviceLine.style.fontSize = '12px';
+    serviceLine.style.opacity = '0.95';
+    banner.appendChild(serviceLine);
+
+    panel.appendChild(banner);
+  }
+  const CBA_LAW_TEXT = [
+    "The parties' Arbitration Contract (signed 1/9/2026, per the Nov. 26, 2025 CBA program) makes the Committee's determination final and binding, governed by the Rules of the Legal Fee Arbitration and Mediation Committee, applicable ethical considerations, comparable fees for similar services, and Colorado law.",
+    "The Committee's award may address whether additional fees are due, whether a refund of fees already paid is warranted, and may resolve any dispute over the agreement's validity \u2014 but only as to fees and costs incurred in the underlying matter before this arbitration was initiated (per the Nov. 26, 2025 program letter).",
+    "The June 25, 2025 Fee Agreement, Section 13, contains its own binding arbitration clause requiring fee disputes to be resolved through this exact process.",
+    "No award may include fees or costs incurred in presenting this dispute to the Committee itself \u2014 that is expressly waived by both sides upon submission."
+  ];
+  const CBA_FACTS = [
+    { text: "Prior counsel (Antolinez) brought the case to trial-ready posture for the original June 23, 2025 setting for approximately $16,340.25 total \u2014 including pleadings, a deposition, discovery, multiple motions, and the original JTMC and core exhibit set.", cite: "Party's Jan. 9, 2026 CBA Submission, Attachment B" },
+    { text: "The Law Office of Alexandra White, PC was retained 6/25/2025 and billed a total of approximately $87,230.10 through 12/30/2025, with relatively few new exhibits added and much of the work re-using/re-organizing materials already prepared by prior counsel.", cite: "Fee Agreement 6/25/2025; CBA Submission, Attachment B" },
+    { text: "The docket shows no White filing between the 6/27/2025 substitution and 8/22/2025 \u2014 roughly an eight-week gap in visible case activity during the billed period.", cite: "District Court JBITS filing log" },
+    { text: "Deanna and her sister Stephanie performed substantial uncompensated support work \u2014 compiling information, preparing spreadsheets, organizing materials \u2014 that the firm incorporated directly into the trial binder and used at hearing.", cite: "Party's Jan. 9, 2026 CBA Submission, Attachment B" },
+    { text: "After the fee challenge was raised, the attorney would not continue representation under the same terms; a separate $10,000 post-trial retainer was cashed, no written scope was ever provided, and the contemplated post-trial work was not completed \u2014 Petitioner ultimately proceeded pro se to protect her rights on the day of the Rule 59 deadline.", cite: "Party's Jan. 9, 2026 CBA Submission, Attachment B" },
+    { text: "The amount in dispute has been stated two different ways in the record: $62,350.98 (Jan. 9, 2026 form) and $80,000.00 (Feb. 6, 2026 email) \u2014 not yet reconciled.", cite: "CBA Submission 1/9/2026; Email 2/6/2026", flagRow: true }
+  ];
+  const CBA_AUTHORITIES = [
+    { text: "A binding arbitration clause in a signed fee agreement (here, Section 13) is independently enforceable as the contractual basis for the Committee's jurisdiction.", cite: "Fee Agreement, \u00a7 13, 6/25/2025" },
+    { text: "The Committee's award is limited to fees/costs in the underlying matter incurred before submission to arbitration \u2014 it cannot include costs of the arbitration process itself.", cite: "CBA Program Letter, 11/26/2025, \u00b6 9" }
+  ];
+  const CBA_LENSES = {
+    party: { label: "Party (Deanna)", panelTitle: "Framing the strongest version of this claim", anchor: "A firm that inherited a trial-ready case billed more than five times what it took to build that case in the first place.",
+      body: ["Lead with the baseline: prior counsel's $16,340.25 built the case to trial-ready. Everything after that is the successor firm's own time, and it should be measured against what was actually left to do, not what a case from scratch would cost.",
+             "The eight-week filing gap (6/27\u20138/22) is not neutral \u2014 it's billed time with no visible docket activity, and it deserves a direct accounting.",
+             "The uncompensated work performed by Deanna and Stephanie, later used in the firm's own trial binder, is a real, quantifiable offset the Committee should weigh.",
+             "The post-trial $10,000 retainer with no written scope and incomplete work is its own discrete issue \u2014 money received for services not delivered."]},
+    arbitrator: { label: "Arbitrator (Neutral)", panelTitle: "Where a neutral fee arbitrator will actually look", anchor: "Reasonableness is measured against the value of services actually rendered, not against what a different firm might have charged.",
+      body: ["An arbitrator will want itemized billing records, not just a total \u2014 the comparison to prior counsel's $16,340.25 is persuasive only if the itemized entries can be lined up against it.",
+             "The eight-week gap alone doesn't prove unreasonableness \u2014 case strategy sometimes involves deliberate review time. What matters is whether the eventual work product reflects that time meaningfully.",
+             "Uncompensated client contributions are commonly considered in fee disputes, but the arbitrator will want to see they were requested or expected by the firm, not simply volunteered.",
+             "The $62,350.98 vs. $80,000 discrepancy needs to be resolved by the party before the hearing \u2014 inconsistent numbers in the record undermine credibility on the core ask."]},
+    attorneyParty: { label: "Attorney Party's Likely Defense", panelTitle: "The steelman version of White's position", anchor: "Complex litigation with trial preparation, discovery, and a full evidentiary hearing reasonably generates substantial billable time regardless of a prior attorney's work.",
+      body: ["Expect White to argue that reviewing, verifying, and re-preparing another attorney's work for a full-day evidentiary hearing is itself substantial, necessary work \u2014 not duplicative padding.",
+             "Expect an argument that the case's complexity (financial records spanning decades, numerous exhibits, contested testimony) justified the total hours regardless of the starting posture.",
+             "Expect White to characterize the client and Stephanie's contributions as voluntary assistance, not a substitute for billable professional work.",
+             "Expect the post-trial retainer to be characterized as a good-faith attempt to continue assistance under new, still-being-negotiated terms, not a completed engagement."]},
+    inversion: { label: "Inversion", panelTitle: "Following the defense's own logic to where it leads", anchor: "If the case's complexity justifies the total bill, that same complexity is exactly what prior counsel already priced at $16,340.25.",
+      body: ["If White's defense is 'this was complex litigation requiring substantial hours' \u2014 that complexity existed identically under prior counsel, who billed a fraction of the amount for reaching the same trial-ready posture. The complexity argument cuts against the fee, not for it.",
+             "If the two-month gap reflected legitimate strategic review, that review should be visible in materially improved work product \u2014 but the record shows relatively few new exhibits added. A gap that produces little visible change is difficult to bill as active case-strengthening time.",
+             "If uncompensated client work was merely 'assistance,' its direct incorporation into the firm's own trial binder and use at hearing is hard to reconcile with billing full-rate time for the same exhibit and file management work simultaneously."]}
+  };
+  const CBA_CONCLUSION_TEXT = [
+    "The Committee is asked to determine what portion of the $87,230.10 billed reflects reasonable, non-duplicative professional services, measured against the trial-ready posture prior counsel had already achieved for approximately $16,340.25.",
+    "That determination should account for the visible gap in case activity, the uncompensated work incorporated into the firm's own trial materials, and the incomplete, undocumented post-trial engagement.",
+    "The party has requested the Committee reduce the invoices and outstanding balance accordingly and order a refund or credit of all unreasonable or excessive charges."
+  ];
+  const CBA_STRENGTH = { rank: "B+", note: "Strong factual contrast (prior-counsel baseline vs. billed total) and a real documented gap, but the two conflicting dollar figures need reconciling before the 9/25/26 filing, and itemized billing records will be essential to substantiate the comparison." };
+
+  // ================= OARC (Case #26-466) — Foundation only, pending written confirmation =================
+  const OARC_INFO = {
+    caseNumber: "26-466 (confirmed via phone, not yet in writing)",
+    contact: "Margarita, OARC Intake \u2014 (303) 457-5800",
+    status: "Reported closed as of 4/21/2026 (verbal, from Margarita) \u2014 no written confirmation on file yet",
+    mailingAddress: "Office of Attorney Regulation Counsel, 1300 Broadway, Suite 500, Denver, CO 80203",
+    activeOwner: "Stephanie is actively developing this matter as of July 2026"
+  };
+  const OARC_LAW_NOTES = [
+    "OARC investigates alleged violations of the Colorado Rules of Professional Conduct, governed by C.R.C.P. 242.",
+    "Statute of limitations to file: 5 years from discovery of the misconduct (C.R.C.P. 242.12) \u2014 not a current time pressure here.",
+    "A complaining witness may request review of a dismissal by Regulation Counsel or the Legal Regulation Committee; the standard is whether the dismissal was an abuse of discretion (C.R.C.P. 242.15). This is the likely mechanism for Case #26-466 once written confirmation of closure is obtained."
+  ];
+
+  // ================= GLOSSARY =================
+  const GLOSSARY = [
+    { term: "Gate Status", def: "The five-stage quality pipeline every note passes through before it's usable in a filing: Captured \u2192 Verified \u2192 Legally Supported \u2192 Tone-Checked \u2192 Gate-Passed." },
+    { term: "SPAR", def: "Stress-test / Position / Angles / Readiness. An on-demand adversarial pass against a specific fact or argument, run at one of three levels (Quick Check, Standard, Full) to find where it breaks before it goes out the door." },
+    { term: "Pre-Mortem", def: "A single pass, run once near the end of a matter: assume the ruling already came back against us \u2014 working backward, what's the most likely reason? Different from SPAR \u2014 tests the whole strategy's blind spots, not one argument's angles." },
+    { term: "Inversion", def: "Taking the opposing side's own stated argument and following its logic to where it actually leads \u2014 often back in the Petitioner's favor." },
+    { term: "Scope", def: "How wide a lens a note is viewed through: Micro \u2192 Finding \u2192 Issue \u2192 Phase \u2192 Case \u2192 Systemic (50,000 ft)." },
+    { term: "Intent", def: "What kind of note this is: a Fact, a Legal Argument, a flagged Contradiction, an open Question, a Strategic Placement note, a Task, or a Personal/Context note." },
+    { term: "Matter", def: "Which of the three lanes a note or ledger entry belongs to: the Appeal, the CBA Fee Arbitration, or the OARC Complaint." },
+    { term: "Bucket", def: "Where a note sits in review: Pending \u2192 Review \u2192 Approved. Stephanie's notes cap at Review; only Deanna can mark something Approved." },
+    { term: "\"???\"", def: "A valid answer in every tag category \u2014 for Deanna or Stephanie's own uncertainty, never a suggestion from the tool. Findable later with the \"??? Only\" filter." },
+    { term: "Representation Period", def: "Which attorney's numbering/timeframe an exhibit or JTMC citation belongs to \u2014 needed because Antolinez's pre-trial exhibit list and White's final Admitted list numbered some documents differently." }
+  ];
+
+  // ================= APPEAL REQUIREMENTS (all Colorado C.A.R. \u2014 no federal rules apply) =================
+  const APPEAL_STEPS = [
+    { step: "1. Notice of Appeal", desc: "Starts the appeal. Must be filed within 49 days of the final judgment (C.A.R. 4(a)).", status: "Done", date: "6/9/2026", flag: false },
+    { step: "2. Docket Fee", desc: "Paid at the same time as the Notice of Appeal.", status: "Done", date: "6/9/2026", flag: false },
+    { step: "3. Designation of Record/Transcript", desc: "The \u201cpacking list\u201d of what belongs in the record \u2014 due within 7 days of the Notice of Appeal (C.A.R. 10(d)).", status: "Done", date: "6/15/2026", flag: false },
+    { step: "4. Docketing Statement", desc: "Required under C.A.R. 3.4 in most appeals \u2014 not separately confirmed in the JBITS filing list. Verify directly with the Court of Appeals clerk.", status: "VERIFY", date: "\u2014", flag: true },
+    { step: "5. Record on Appeal", desc: "The full case file, exhibits, and transcripts. Transmitted by the District Court Clerk, not filed by you.", status: "Pending (court's obligation)", date: "Due 8/11/2026", flag: true },
+    { step: "6. Opening Brief", desc: "Your written argument. Due 42 days after the record is filed (C.A.R. 31(a)(2)(A)). Max 9,500 words (C.A.R. 28(g)).", status: "Not yet triggered", date: "Est. ~late Sept 2026", flag: true },
+    { step: "7. Answer Brief", desc: "Respondent's written response. Due 35 days after your Opening Brief is filed. Max 9,500 words.", status: "Not yet triggered", date: "\u2014", flag: false },
+    { step: "8. Reply Brief (optional)", desc: "Your optional response to new matters raised in the Answer Brief. Due 21 days after the Answer Brief. Max ~5,700 words.", status: "Optional", date: "\u2014", flag: false },
+    { step: "9. Oral Argument (if granted)", desc: "The Court decides whether to grant it; if so, notice is mailed with date/format.", status: "Not yet determined", date: "\u2014", flag: false },
+    { step: "10. Opinion", desc: "The Court of Appeals' written decision.", status: "Not yet reached", date: "\u2014", flag: false }
+  ];
+
+  const APPEAL_FORMATTING = [
+    { rule: "Font size", requirement: "14-point or larger (12-point allowed only for the caption, if needed to fit one page).", cite: "C.A.R. 32" },
+    { rule: "Font style", requirement: "Plain roman style with serifs. One of: Bookman, Garamond, or Times New Roman. Italics/bold for emphasis only, not body text.", cite: "C.A.R. 32; CV13I Instructions" },
+    { rule: "Spacing", requirement: "Double-spaced (block quotes, headings, and footnotes may be single-spaced).", cite: "C.A.R. 32" },
+    { rule: "Printing", requirement: "One side of the page only.", cite: "C.A.R. 32; CV13I Instructions" },
+    { rule: "Opening Brief word limit", requirement: "9,500 words maximum \u2014 or up to 30 double-spaced pages if handwritten with no word processor.", cite: "C.A.R. 28(g); CV13I Instructions" },
+    { rule: "Answer Brief word limit", requirement: "9,500 words maximum.", cite: "C.A.R. 28(g)" },
+    { rule: "Reply Brief word limit", requirement: "Approximately 5,700 words maximum.", cite: "C.A.R. 28(g) (per standard Certificate of Compliance form)" },
+    { rule: "Certificate of Compliance", requirement: "Required with every brief \u2014 must state the exact word count and confirm compliance with C.A.R. 28 and C.A.R. 32.", cite: "C.A.R. 28(g); Certificate of Compliance form" }
+  ];
+
+  const APPEAL_BRIEF_CHECKLIST = [
+    "Cover page / case caption (specific required order of information \u2014 see C.A.R. 32)",
+    "Table of Contents",
+    "Table of Authorities \u2014 cases (alphabetical), statutes, and other authorities, with page references",
+    "Statement of the Issues Presented for Review",
+    "Statement of the Case \u2014 facts and procedural history, with record citations (C.A.R. 28(e))",
+    "For each issue: a separate heading stating the standard of review (with citation) and whether/where it was preserved below (C.A.R. 28(a)(7)(A))",
+    "Argument \u2014 succinct, clear statement of reasoning for each issue",
+    "Conclusion \u2014 precise statement of the relief sought",
+    "Certificate of Compliance (word count + rule compliance)",
+    "Certificate of Service"
+  ];
+
+  // ================= TAG TAXONOMY =================
+  const PEOPLE_TAGS = [
+    "Petitioner (Deanna Evich)", "Respondent (Lisa Stone)",
+    "Judge Michelle Elizabeth Jones (Hearing Judge)", "Judge Christine Alexandra Washburn (Case Mgmt Judge)",
+    "Respondent's Counsel \u2014 Lauren Romero", "Respondent's Counsel \u2014 Kelley Rider Goodwin", "Respondent's Counsel \u2014 Sharlene Aitken (Appeal)",
+    "Petitioner's Counsel \u2014 Joe Antolinez", "Petitioner's Counsel \u2014 Alexandra White",
+    "Witness \u2014 Bret Stolhand", "Witness \u2014 Kelsie Jas", "Witness \u2014 Michael Harmon", "Witness \u2014 David Gonzales",
+    "Staff / Paralegal (specify in note)", "???"
+  ];
+  const DOCTYPE_TAGS = [
+    "JBITS \u2014 District Court (Docket Entry)", "JBITS \u2014 Appellate Court (Docket Entry)",
+    "JTMC", "Hearing Transcript", "Exhibits", "Testimony", "Orders / Rulings", "Correspondence",
+    // Start the case
+    "Petition for Dissolution of Marriage", "Case Information Sheet (JDF 1000)", "Summons", "Filing Fee / Fee Waiver Request",
+    // Service
+    "Waiver of Service", "Return of Service", "Proof of Service / E-File Confirmation",
+    // Required disclosures
+    "Certificate of Compliance (Mandatory Disclosures)", "Sworn Financial Statement", "Sworn Financial Statement Supporting Schedule",
+    // If children involved
+    "Parenting Plan", "Child Support Worksheet", "Order for Allocation of Parental Responsibilities", "Parenting Time / Custody Forms",
+    // Settlement or final decree
+    "Separation Agreement", "Affidavit for Decree without Appearance", "Proposed Decree of Dissolution/Legal Separation", "Support Order",
+    // Common later filings
+    "Motion", "Stipulated Motion", "Response", "Reply", "Affidavit", "Proposed Order", "Motion to Dismiss",
+    "???"
+  ];
+  const PHASE_TAGS = ["Pre-Trial", "Trial", "Final Ruling", "Post-Trial (Rule 59)", "Appeal", "Notice of Appeal", "???"];
+  const SCOPE_TAGS = ["Micro", "Finding", "Issue", "Phase", "Case", "Systemic (50,000 ft)", "???"];
+  const INTENT_TAGS = ["Fact / Evidence", "Legal Argument / Analysis", "Contradiction / Discrepancy Flag", "Question / Open Item", "Strategic Placement", "Task / Action Item", "Personal / Context Note", "???"];
+  const SUBMITTED_BY = ["Deanna", "Stephanie"];
+  const MATTER_TAGS = ["District Dissolution of Marriage Case (2024DR31793)", "Appeal (2026CA1119)", "CBA Fee Arbitration (Evich v. White)", "OARC Complaint (#26-466)", "Cross-Matter / General", "Other"];
+  const REPRESENTATION_PERIOD_TAGS = ["Pre-Trial (Antolinez, thru 6/27/25)", "Trial Prep/Hearing (White, 6/27/25\u201312/18/25)", "Post-Trial Pro Se (2/17/26\u2013present)", "N/A"];
+  const BUCKET_STAGES = ["Pending", "Review", "Approved"];
+  const GATE_STAGES = ["Captured", "Verified", "Legally Supported", "Tone-Checked", "Gate-Passed"];
+  const LEDGER_STATUS = ["Checked In", "Pending", "Discrepancy Flagged"];
+
+  const VERSION_HISTORY = [
+    "v1 \u2014 Issue I lens prototype (Attorney/Judge/Opposing Counsel)",
+    "v2 \u2014 Added Case Foundation + Findings Cross-Reference + Voice Capture Log",
+    "v3 \u2014 Deed timeline & filing-mechanics update (Finding 83, two-occasion asymmetry)",
+    "v4 \u2014 Notes retagged (multi-dimension) + Master Mic (global capture)",
+    "v5 \u2014 Full Case Command Center: Gate Status, Scope/Intent, Law\u2192Fact\u2192Application\u2192Conclusion, Inversion lens, Check-In Ledger, Export/Import",
+    "v6 \u2014 Voice-to-text added to every required/text field (What caught your eye, Ledger fields); home-screen/desktop icon + manifest added",
+    "v7 \u2014 Responsive layout for phone/tablet (portrait & landscape); scrollable tables; Legal Authorities table; Copy-with-citation-prompt; corrected counsel history + staff caveat; ??? tooltip",
+    "v8 \u2014 Matter tag (Appeal/CBA/OARC) added to Notes + Ledger for the three-lane structure; fixed Exhibit 8/48 citation error (final Admitted numbering vs. pre-trial numbering); Representation Period tracking; confirmed exact substitution/withdrawal dates from JBITS filing spreadsheet",
+    "v9 \u2014 Lane Selector landing page (red-to-green ribbon); full CBA Fee Arbitration section (Law/Fact/Application/Conclusion, built from verified submission documents); OARC Foundation entry (limited, pending written confirmation); Glossary; note-level versioning + Edit; Export & Clear utility",
+    "v10 \u2014 Overview clarity fix: Petitioner's and Respondent's counsel history now shown as clean date-first timelines instead of dense run-on paragraphs",
+    "v11 \u2014 Lane selector cover replaced: formal navy background with the scales icon, matching the rest of the site \u2014 dropped the red/green gradient concept",
+    "v12 \u2014 Appeal Requirements tab added: every step with deadlines, C.A.R. 32 formatting rules (14-pt font, Bookman/Garamond/Times New Roman, double-spaced), verified word limits (9,500/9,500/5,700), and the required brief-section checklist \u2014 all Colorado C.A.R., no federal rules",
+    "v13 \u2014 Fixed navigation: Case Foundation always first, Stephanie's World always last, in every lane. Check-In Ledger moved inside Foundation. 'Change Lane' renamed 'Home'. Embedded Google Drive document preview (in-page, no leaving the tracker). Stephanie's World now holds her own linked sources + voice notes",
+    "v14 \u2014 CBA Deadline Countdown Banner: always-visible on every visit to the CBA tab, tracks the next unmet deadline (9/25/26, rolling to 10/2/26), neutral until 30 days out then pale-pink-to-deep-red escalation with bolder text as it closes in, pulses inside 3 days. Includes the deadline's checklist items and the confirmed ShareFile service mechanics (5/4/2026 Vetter email) inline.",
+    "v15 \u2014 Version History moved out of the header (was one dense run-on line) into its own Case Foundation sub-tab, shown as a proper table. Cover page remapped to match the reference design: laurel-and-scales crest, serif title, gold small-caps eyebrow, italic tagline, refined line-icon doors (courthouse/moneybag/clipboard/folder), and a three-item footer strip (Focused on Truth / Built on Integrity / Pursuing Justice).",
+    "v16 \u2014 Case Flow / Benefit Analysis tab added (Appeal and Whole Case lanes): Case Flow sub-tab maps the five procedural phases in sequence; Benefit Analysis sub-tab lays out benefits vs. costs/risks of pursuing the appeal, sourced from Issue I's existing Strength rating and verified record facts \u2014 no new facts introduced.",
+    "v17 \u2014 Label Tracker added (global tab): cross-references exhibit/document labels across Antolinez's pre-trial numbering, White's final Admitted numbering, and the CBA's number/letter scheme; auto-flags any row where Pre-Trial and Final Admitted numbers don't match \u2014 the exact category of error behind the earlier Exhibit 8/48 fix.",
+    "v18 \u2014 Wide View toggle added to the header: manually widens the layout for reading dense tables, independent of device rotation; preference is remembered between sessions.",
+    "v19 \u2014 Share button added to the header: uses the device's native Share sheet where available (mobile), or copies the tracker's link to the clipboard as a fallback with an on-screen confirmation.",
+    "v20 \u2014 Document/Source Type list overhauled: JBITS split into District Court and Appellate Court variants (two separate systems); full Colorado dissolution filing checklist added (start-case forms, service, mandatory disclosures, children's forms, settlement/decree, common later filings) \u2014 same list now feeds Notes tagging, the Notes filter, and the Check-In Ledger's Document Type field.",
+    "v21 \u2014 Matter menu: added 'District Dissolution of Marriage Case' and 'Other'. Every Delete button across the tracker (Notes, Label Tracker, Stephanie's World, Check-In Ledger) now requires confirmation first \u2014 no more silent deletes. Added a Document Linking Progress counter (top of Check-In Ledger tab): manual +1/-1 tally against an editable target (default 300), with a progress bar, direct count/target editing, and a confirmed reset.",
+    "v22 \u2014 Full Edit capability added to Label Tracker, Check-In Ledger, and Stephanie's World sources \u2014 every field on every entry can now be corrected in place instead of delete-and-re-add. Intended to stay in place at least until the case baseline is fully established and verified.",
+    "v23 \u2014 Cover page: replaced SVG illustration with the actual case image (PWA_CASE-MGTM_Image-Jul-24-2026.png from Vercel). Image is displayed untouched at full width. Four invisible clickable zones sit over the four door areas in the image \u2014 a subtle gold tint on hover confirms the zone. Image is the design, code does not draw on top of it.",
+    "v24 \u2014 Background white space eliminated: body and html both set to #0D1B2E (the deep navy sampled from the cover image corners) so no white flash or gap appears on any screen size or device."
+  ];
+
+  async function copyWithPrompt(text, citation) {
+    let toCopy = text;
+    if (citation) {
+      const includeCite = confirm('Include the citation reference (' + citation + ') in the copied text?');
+      if (includeCite) toCopy = text + ' ' + citation;
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(toCopy);
+        return true;
+      }
+    } catch (e) { /* fall through to legacy method */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = toCopy;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function buildCopyButton(text, citation) {
+    const btn = el('button', 'copy-btn', 'Copy');
+    btn.type = 'button';
+    btn.title = 'Copy without the citation marking by default \u2014 you\'ll be asked first if you want it included.';
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      const ok = await copyWithPrompt(text, citation);
+      const original = btn.textContent;
+      btn.textContent = ok ? 'Copied' : 'Failed';
+      setTimeout(() => { btn.textContent = original; }, 1200);
+    };
+    return btn;
+  }
+
+  // ================= HELPERS =================
+  function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+  function genId() { return Date.now() + '_' + Math.floor(Math.random() * 100000); }
+
+  function attachDictation(textarea, statusEl, onCommit) {
+    const Recognition = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    const row = el('div', 'dictate-row');
+    const btn = el('button', 'dictate-btn');
+    btn.type = 'button';
+    btn.innerHTML = '<span class="mic-dot"></span> Dictate';
+    row.appendChild(btn);
+    if (!Recognition) {
+      btn.disabled = true;
+      btn.title = 'Speech recognition not supported in this browser. Try Chrome or Edge.';
+      row.appendChild(el('span', 'notes-status', 'Voice input needs Chrome or Edge.'));
+      return row;
+    }
+    let recognizing = false;
+    let recognition;
+    btn.onclick = () => {
+      if (recognizing) { recognition.stop(); return; }
+      recognition = new Recognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      let finalTranscript = textarea.value ? textarea.value + ' ' : '';
+      recognition.onstart = () => { recognizing = true; btn.classList.add('listening'); btn.innerHTML = '<span class="mic-dot"></span> Listening... (click to stop)'; };
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript + ' ';
+          else interim += event.results[i][0].transcript;
+        }
+        textarea.value = finalTranscript + interim;
+      };
+      recognition.onerror = (e) => { if (statusEl) statusEl.textContent = 'Mic error: ' + e.error; };
+      recognition.onend = () => {
+        recognizing = false; btn.classList.remove('listening'); btn.innerHTML = '<span class="mic-dot"></span> Dictate';
+        if (onCommit) onCommit(textarea.value);
+      };
+      recognition.start();
+    };
+    return row;
+  }
+
+  async function storageGet(key) {
+    try { const v = localStorage.getItem('evich_tracker_' + key); return v === null ? null : v; } catch (e) { return null; }
+  }
+  async function storageSet(key, value) {
+    try { localStorage.setItem('evich_tracker_' + key, value); return true; } catch (e) { return false; }
+  }
+
+  // ================= APP STATE =================
+  let currentLane = null;
+  let mainTab = 'foundation';
+  let foundationSubTab = 'overview';
+  let issueSubTab = 'law';
+  let issueLens = 'attorney';
+  let cbaSubTab = 'law';
+  let cbaLens = 'party';
+  let voiceLog = [];
+  let ledgerEntries = [];
+  let stephanieLinks = [];
+  let previewLink = null;
+  let noteFilter = { people: null, docType: null, phase: null, scope: null, intent: null, submittedBy: null, bucket: null, matter: null, onlyUnknown: false };
+  let masterMicOpen = false;
+  let editingNoteId = null;
+  let editingLabelId = null;
+  let editingLedgerId = null;
+  let editingStephanieId = null;
+  let lastExportTime = null;
+  let wideView = false;
+
+  function driveEmbedUrl(link) {
+    if (!link) return null;
+    const m = link.match(/\/d\/([a-zA-Z0-9_-]+)/) || link.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (!m) return null;
+    return 'https://drive.google.com/file/d/' + m[1] + '/preview';
+  }
+  function buildPreviewButton(link) {
+    const embedUrl = driveEmbedUrl(link);
+    const btn = el('button', 'copy-btn', embedUrl ? 'Preview' : 'Open only');
+    btn.type = 'button';
+    btn.onclick = () => {
+      if (embedUrl) { previewLink = { url: embedUrl, original: link }; render(); }
+      else { window.open(link, '_blank', 'noopener'); }
+    };
+    return btn;
+  }
+  function renderDrivePreviewModal(root) {
+    if (!previewLink) return;
+    const overlay = el('div', 'modal-overlay');
+    const modal = el('div', 'modal-box');
+    modal.style.maxWidth = '800px';
+    const closeBtn = el('button', 'modal-close', '\u00d7');
+    closeBtn.onclick = () => { previewLink = null; render(); };
+    modal.appendChild(closeBtn);
+    modal.appendChild(el('div', 'panel-title', 'Document Preview'));
+    const iframe = document.createElement('iframe');
+    iframe.src = previewLink.url;
+    iframe.style.width = '100%';
+    iframe.style.height = '480px';
+    iframe.style.border = '1px solid #ddd';
+    iframe.style.borderRadius = '6px';
+    iframe.setAttribute('allow', 'autoplay');
+    modal.appendChild(iframe);
+    const openRow = el('div', 'dictate-row');
+    openRow.style.marginTop = '10px';
+    const openLink = document.createElement('a');
+    openLink.href = previewLink.original;
+    openLink.target = '_blank';
+    openLink.rel = 'noopener';
+    openLink.className = 'drive-link';
+    openLink.textContent = 'Open full view in Google Drive \u2192';
+    openRow.appendChild(openLink);
+    modal.appendChild(openRow);
+    overlay.appendChild(modal);
+    overlay.onclick = (e) => { if (e.target === overlay) { previewLink = null; render(); } };
+    root.appendChild(overlay);
+  }
+
+  async function loadVoiceLog() {
+    const raw = await storageGet('voice_log');
+    voiceLog = raw ? JSON.parse(raw) : [];
+  }
+  async function saveVoiceLog() {
+    await storageSet('voice_log', JSON.stringify(voiceLog));
+  }
+  async function loadLedger() {
+    const raw = await storageGet('checkin_ledger');
+    ledgerEntries = raw ? JSON.parse(raw) : [];
+  }
+  async function saveLedger() {
+    await storageSet('checkin_ledger', JSON.stringify(ledgerEntries));
+  }
+  async function loadStephanieLinks() {
+    const raw = await storageGet('stephanie_links');
+    stephanieLinks = raw ? JSON.parse(raw) : [];
+  }
+  async function saveStephanieLinks() {
+    await storageSet('stephanie_links', JSON.stringify(stephanieLinks));
+  }
+  let labelEntries = [];
+  async function loadLabelEntries() {
+    const raw = await storageGet('label_tracker');
+    labelEntries = raw ? JSON.parse(raw) : [];
+  }
+  async function saveLabelEntries() {
+    await storageSet('label_tracker', JSON.stringify(labelEntries));
+  }
+  let docLinkProgress = { count: 0, target: 300 };
+  async function loadDocLinkProgress() {
+    const raw = await storageGet('doc_link_progress');
+    docLinkProgress = raw ? JSON.parse(raw) : { count: 0, target: 300 };
+  }
+  async function saveDocLinkProgress() {
+    await storageSet('doc_link_progress', JSON.stringify(docLinkProgress));
+  }
+
+  function computeSessionId(submittedBy) {
+    const mine = voiceLog.filter(n => n.submittedBy === submittedBy);
+    if (mine.length === 0) return genId();
+    const last = mine[0]; // voiceLog is unshifted, most recent first
+    const gapMs = Date.now() - (last.tsRaw || 0);
+    if (gapMs < 30 * 60 * 1000) return last.sessionId;
+    return genId();
+  }
+
+  // ================= SHARED: NOTE CAPTURE FORM =================
+  function buildTagGroup(title, options, selectedSet, single) {
+    const group = el('div', 'tag-group');
+    group.appendChild(el('div', 'tag-group-title', title));
+    const chipRow = el('div', 'chip-row');
+    options.forEach(opt => {
+      const chip = el('span', 'chip' + (selectedSet.has(opt) ? ' selected' : ''), opt);
+      if (opt === '???') chip.title = "Not sure how to categorize this yet? That's fine \u2014 mark it and keep moving. This is for YOUR uncertainty, not a suggestion from the tool. Find it later with the \"??? Only\" filter on the Notes tab.";
+      chip.onclick = () => {
+        if (single) {
+          selectedSet.clear();
+          chipRow.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+          selectedSet.add(opt);
+          chip.classList.add('selected');
+        } else {
+          if (selectedSet.has(opt)) selectedSet.delete(opt); else selectedSet.add(opt);
+          chip.classList.toggle('selected');
+        }
+      };
+      chipRow.appendChild(chip);
+    });
+    group.appendChild(chipRow);
+    return group;
+  }
+
+  function buildCaptureForm(onSaved, opts) {
+    opts = opts || {};
+    const form = el('div', 'voice-entry');
+    form.appendChild(el('div', null, '<strong>New Note</strong>' + (opts.contextNote ? ' <span class="cite">' + opts.contextNote + '</span>' : '')));
+
+    // Required: What caught your eye
+    form.appendChild(el('div', 'tag-group-title', 'What caught your eye? (required)'));
+    const eyeInput = document.createElement('input');
+    eyeInput.className = 'notesinput';
+    eyeInput.placeholder = 'One short phrase, in your own words...';
+    const eyeStatus = el('div', 'notes-status', '');
+    const eyeDictateRow = attachDictation(eyeInput, eyeStatus);
+    form.appendChild(eyeDictateRow);
+    form.appendChild(eyeInput);
+    form.appendChild(eyeStatus);
+
+    // Optional longer note body, with dictation
+    const textarea = document.createElement('textarea');
+    textarea.className = 'notesarea';
+    textarea.style.marginTop = '8px';
+    textarea.placeholder = 'Add more detail here if you want \u2014 tap Dictate and start talking, or type directly...';
+    const status = el('div', 'notes-status', '');
+    const dictateRow = attachDictation(textarea, status);
+    form.appendChild(dictateRow);
+    form.appendChild(textarea);
+
+    // Structured fields: Submitted By, Bucket, Date of Record
+    const grid = el('div', 'form-grid');
+    const byField = el('div', 'form-field');
+    byField.appendChild(el('label', null, 'Submitted By'));
+    const bySelect = document.createElement('select');
+    bySelect.innerHTML = SUBMITTED_BY.map(b => `<option value="${b}"${opts.defaultSubmittedBy === b ? ' selected' : ''}>${b}</option>`).join('');
+    byField.appendChild(bySelect);
+    grid.appendChild(byField);
+
+    const bucketField = el('div', 'form-field');
+    bucketField.appendChild(el('label', null, 'Bucket'));
+    const bucketSelect = document.createElement('select');
+    function refreshBucketOptions() {
+      const allowed = bySelect.value === 'Stephanie' ? ['Pending', 'Review'] : BUCKET_STAGES;
+      bucketSelect.innerHTML = allowed.map(b => `<option value="${b}">${b}</option>`).join('');
+    }
+    refreshBucketOptions();
+    bySelect.onchange = refreshBucketOptions;
+    bucketField.appendChild(bucketSelect);
+    grid.appendChild(bucketField);
+
+    const dorField = el('div', 'form-field');
+    dorField.appendChild(el('label', null, 'Date of Record (optional \u2014 when the underlying event happened)'));
+    const dorInput = document.createElement('input');
+    dorInput.type = 'date';
+    dorField.appendChild(dorInput);
+    grid.appendChild(dorField);
+    form.appendChild(grid);
+
+    // Matter (single, required) - which of the three lanes this belongs to
+    const matterSet = new Set(opts.presetMatter ? [opts.presetMatter] : []);
+    form.appendChild(buildTagGroup('Matter (pick one \u2014 required)', MATTER_TAGS, matterSet, true));
+
+    // Scope (single) and Intent (single)
+    const scopeSet = new Set(opts.presetScope ? [opts.presetScope] : []);
+    const intentSet = new Set(opts.presetIntent ? [opts.presetIntent] : []);
+    form.appendChild(buildTagGroup('Scope (pick one)', SCOPE_TAGS, scopeSet, true));
+    form.appendChild(buildTagGroup('Intent (pick one)', INTENT_TAGS, intentSet, true));
+
+    // People / DocType / Phase (multi)
+    const peopleSet = new Set(), docSet = new Set(), phaseSet = new Set(opts.presetPhase ? [opts.presetPhase] : []);
+    form.appendChild(buildTagGroup('People', PEOPLE_TAGS, peopleSet, false));
+    form.appendChild(buildTagGroup('Document / Source Type', DOCTYPE_TAGS, docSet, false));
+    form.appendChild(buildTagGroup('Case Phase', PHASE_TAGS, phaseSet, false));
+
+    // Representation Period (single, optional) - which attorney's numbering/period this relates to
+    const repPeriodSet = new Set();
+    form.appendChild(buildTagGroup('Representation Period (optional \u2014 for exhibit/JTMC citations)', REPRESENTATION_PERIOD_TAGS, repPeriodSet, true));
+
+    const saveBtn = el('button', 'dictate-btn', 'Save Note');
+    saveBtn.type = 'button';
+    saveBtn.style.marginTop = '10px';
+    saveBtn.onclick = async () => {
+      if (!eyeInput.value.trim()) {
+        eyeStatus.textContent = 'What caught your eye? is required.';
+        eyeStatus.style.color = '#A33A3A';
+        return;
+      }
+      if (matterSet.size === 0) {
+        eyeStatus.textContent = 'Please pick a Matter (Appeal / CBA / OARC / Cross-Matter).';
+        eyeStatus.style.color = '#A33A3A';
+        return;
+      }
+      const submittedBy = bySelect.value;
+      const sessionId = computeSessionId(submittedBy);
+      const now = Date.now();
+      voiceLog.unshift({
+        id: genId(),
+        caughtYourEye: eyeInput.value.trim(),
+        text: textarea.value.trim(),
+        ts: new Date(now).toLocaleString(),
+        tsRaw: now,
+        lastEdited: null,
+        dateOfRecord: dorInput.value || null,
+        submittedBy: submittedBy,
+        bucket: bucketSelect.value,
+        gateStatus: 'Captured',
+        version: 1,
+        matter: Array.from(matterSet)[0] || null,
+        people: Array.from(peopleSet),
+        docTypes: Array.from(docSet),
+        phases: Array.from(phaseSet),
+        scope: Array.from(scopeSet)[0] || null,
+        intent: Array.from(intentSet)[0] || null,
+        representationPeriod: Array.from(repPeriodSet)[0] || null,
+        tabContext: opts.tabContext || mainTab,
+        sessionId: sessionId
+      });
+      await saveVoiceLog();
+      if (onSaved) onSaved();
+    };
+    form.appendChild(saveBtn);
+    form.appendChild(status);
+    return form;
+  }
+
+  // ================= EXPORT / IMPORT =================
+  function downloadTextFile(filename, content) {
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  async function exportAllNotes() {
+    const datestamp = new Date().toISOString().slice(0,10);
+    downloadTextFile('evich_notes_ALL_' + datestamp + '.json', JSON.stringify(voiceLog, null, 2));
+    lastExportTime = new Date().toLocaleString();
+    await storageSet('last_export_time', lastExportTime);
+  }
+  function exportSmartFilename(entry) {
+    const matterShort = (entry.matter || 'General').split(' ')[0].replace(/[^a-zA-Z0-9]/g, '');
+    return (entry.submittedBy || 'User') + '_' + matterShort + '_' + (entry.bucket || 'Pending') + '_' + new Date().toISOString().slice(0,10);
+  }
+  async function exportAndClear() {
+    if (voiceLog.length === 0) { alert('No notes to export.'); return; }
+    await exportAllNotes();
+    const typed = prompt('This device has ' + voiceLog.length + ' note(s). They have just been exported \u2014 make sure that file is saved somewhere safe before continuing.\n\nType CLEAR (all caps) to permanently erase notes from THIS DEVICE ONLY. The exported file will be the only copy until re-imported.');
+    if (typed === 'CLEAR') {
+      voiceLog = [];
+      await saveVoiceLog();
+      render();
+    }
+  }
+  function buildImportControl(onDone) {
+    const wrap = el('div', 'dictate-row');
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.style.fontFamily = 'Arial, sans-serif';
+    input.style.fontSize = '11px';
+    input.onchange = async () => {
+      if (!input.files || !input.files[0]) return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          const existingIds = new Set(voiceLog.map(n => n.id));
+          let added = 0;
+          imported.forEach(n => { if (!existingIds.has(n.id)) { voiceLog.push(n); added++; } });
+          voiceLog.sort((a, b) => (b.tsRaw || 0) - (a.tsRaw || 0));
+          await saveVoiceLog();
+          if (onDone) onDone(added);
+        } catch (err) { if (onDone) onDone(-1); }
+      };
+      reader.readAsText(input.files[0]);
+    };
+    wrap.appendChild(el('span', null, 'Import notes file: '));
+    wrap.appendChild(input);
+    return wrap;
+  }
+
+  // ================= RENDER: NOTES TAB =================
+  function noteMatchesFilter(entry) {
+    if (noteFilter.people && !(entry.people || []).includes(noteFilter.people)) return false;
+    if (noteFilter.docType && !(entry.docTypes || []).includes(noteFilter.docType)) return false;
+    if (noteFilter.phase && !(entry.phases || []).includes(noteFilter.phase)) return false;
+    if (noteFilter.scope && entry.scope !== noteFilter.scope) return false;
+    if (noteFilter.intent && entry.intent !== noteFilter.intent) return false;
+    if (noteFilter.submittedBy && entry.submittedBy !== noteFilter.submittedBy) return false;
+    if (noteFilter.bucket && entry.bucket !== noteFilter.bucket) return false;
+    if (noteFilter.matter && entry.matter !== noteFilter.matter) return false;
+    if (noteFilter.onlyUnknown) {
+      const hasUnknown = [entry.scope, entry.intent, ...(entry.people||[]), ...(entry.docTypes||[]), ...(entry.phases||[])].includes('???');
+      if (!hasUnknown) return false;
+    }
+    return true;
+  }
+
+  function buildFilterDropdown(label, options, currentVal, onChange) {
+    const wrap = el('span', 'filter-wrap');
+    wrap.appendChild(el('span', 'filter-label', label + ': '));
+    const select = document.createElement('select');
+    select.innerHTML = '<option value="">All</option>' + options.map(o => `<option value="${o}"${o === currentVal ? ' selected' : ''}>${o}</option>`).join('');
+    select.onchange = () => onChange(select.value || null);
+    wrap.appendChild(select);
+    return wrap;
+  }
+
+  function renderNotesTab(panel) {
+    panel.appendChild(el('div', 'compat-note',
+      'Speech-to-text works in Chrome or Edge. "What caught your eye?" is the one required field \u2014 everything else can be "???" and still be found later. ' +
+      'The Master Mic (bottom-right, on every tab) opens this same form from anywhere on the site.'));
+
+    panel.appendChild(buildCaptureForm(() => render()));
+
+    panel.appendChild(el('div', 'section-heading', 'Backup'));
+    if (lastExportTime) {
+      panel.appendChild(el('div', 'compat-note', 'Last exported: ' + lastExportTime));
+    } else {
+      panel.appendChild(el('div', 'compat-note', 'This device has never been exported. Export regularly \u2014 notes only live on this device unless exported and re-imported elsewhere.'));
+    }
+    const backupRow = el('div', 'dictate-row');
+    const exportBtn = el('button', 'dictate-btn secondary', 'Export Everything');
+    exportBtn.type = 'button';
+    exportBtn.onclick = async () => { await exportAllNotes(); render(); };
+    backupRow.appendChild(exportBtn);
+    const clearBtn2 = el('button', 'dictate-btn', 'Export & Clear This Device');
+    clearBtn2.type = 'button';
+    clearBtn2.onclick = exportAndClear;
+    backupRow.appendChild(clearBtn2);
+    panel.appendChild(backupRow);
+    panel.appendChild(buildImportControl((added) => {
+      const msg = added === -1 ? 'Could not read that file.' : `Imported ${added} new note(s).`;
+      alert(msg);
+      render();
+    }));
+
+    panel.appendChild(el('div', 'section-heading', 'Filter Notes'));
+    const filterRow = el('div', 'filter-row');
+    filterRow.appendChild(buildFilterDropdown('Person', PEOPLE_TAGS, noteFilter.people, (v) => { noteFilter.people = v; render(); }));
+    filterRow.appendChild(buildFilterDropdown('Document Type', DOCTYPE_TAGS, noteFilter.docType, (v) => { noteFilter.docType = v; render(); }));
+    filterRow.appendChild(buildFilterDropdown('Case Phase', PHASE_TAGS, noteFilter.phase, (v) => { noteFilter.phase = v; render(); }));
+    filterRow.appendChild(buildFilterDropdown('Scope', SCOPE_TAGS, noteFilter.scope, (v) => { noteFilter.scope = v; render(); }));
+    filterRow.appendChild(buildFilterDropdown('Intent', INTENT_TAGS, noteFilter.intent, (v) => { noteFilter.intent = v; render(); }));
+    filterRow.appendChild(buildFilterDropdown('Submitted By', SUBMITTED_BY, noteFilter.submittedBy, (v) => { noteFilter.submittedBy = v; render(); }));
+    filterRow.appendChild(buildFilterDropdown('Bucket', BUCKET_STAGES, noteFilter.bucket, (v) => { noteFilter.bucket = v; render(); }));
+    filterRow.appendChild(buildFilterDropdown('Matter', MATTER_TAGS, noteFilter.matter, (v) => { noteFilter.matter = v; render(); }));
+    const unkBtn = el('button', 'dictate-btn' + (noteFilter.onlyUnknown ? '' : ' secondary'), '??? Only');
+    unkBtn.type = 'button';
+    unkBtn.onclick = () => { noteFilter.onlyUnknown = !noteFilter.onlyUnknown; render(); };
+    filterRow.appendChild(unkBtn);
+    const anyFilterActive = Object.keys(noteFilter).some(k => k !== 'onlyUnknown' ? noteFilter[k] : noteFilter.onlyUnknown);
+    if (anyFilterActive) {
+      const clearBtn = el('button', 'dictate-btn secondary', 'Clear Filters');
+      clearBtn.type = 'button';
+      clearBtn.onclick = () => { noteFilter = { people: null, docType: null, phase: null, scope: null, intent: null, submittedBy: null, bucket: null, matter: null, onlyUnknown: false }; render(); };
+      filterRow.appendChild(clearBtn);
+    }
+    panel.appendChild(filterRow);
+
+    const filtered = voiceLog.filter(noteMatchesFilter);
+    panel.appendChild(el('div', 'section-heading', `Notes (${filtered.length} of ${voiceLog.length})`));
+    if (filtered.length === 0) {
+      panel.appendChild(el('div', 'notes-status', voiceLog.length === 0 ? 'No notes yet.' : 'No notes match the current filters.'));
+    }
+
+    let lastSession = null;
+    filtered.forEach(entry => {
+      if (entry.sessionId && entry.sessionId !== lastSession) {
+        panel.appendChild(el('div', 'session-header', 'Session \u2014 ' + entry.ts + (entry.submittedBy ? ' (' + entry.submittedBy + ')' : '')));
+        lastSession = entry.sessionId;
+      }
+      const box = el('div', 'voice-entry');
+      const meta = el('div', 'meta');
+      const leftMeta = el('span', null, entry.ts + (entry.dateOfRecord ? ' \u2014 Date of Record: ' + entry.dateOfRecord : '') + ' \u2014 v' + (entry.version || 1) + (entry.lastEdited ? ' (edited ' + entry.lastEdited + ')' : ''));
+      meta.appendChild(leftMeta);
+      const btnGroup = el('span', null);
+      const editBtn = el('button', 'delete-btn', 'Edit');
+      editBtn.style.color = '#1F3864';
+      editBtn.onclick = () => { editingNoteId = (editingNoteId === entry.id) ? null : entry.id; render(); };
+      btnGroup.appendChild(editBtn);
+      const delBtn = el('button', 'delete-btn', 'Delete');
+      delBtn.onclick = async () => { if (!confirm('Delete this note permanently? This cannot be undone.')) return; voiceLog = voiceLog.filter(e => e.id !== entry.id); await saveVoiceLog(); render(); };
+      btnGroup.appendChild(delBtn);
+      meta.appendChild(btnGroup);
+      box.appendChild(meta);
+
+      if (editingNoteId === entry.id) {
+        const editTextarea = document.createElement('textarea');
+        editTextarea.className = 'notesarea';
+        editTextarea.value = entry.text || '';
+        box.appendChild(editTextarea);
+        const editRow = el('div', 'dictate-row');
+        const saveEditBtn = el('button', 'dictate-btn', 'Save Edit (bumps version)');
+        saveEditBtn.type = 'button';
+        saveEditBtn.onclick = async () => {
+          if (editTextarea.value.trim() !== (entry.text || '')) {
+            entry.text = editTextarea.value.trim();
+            entry.version = (entry.version || 1) + 1;
+            entry.lastEdited = new Date().toLocaleString();
+            await saveVoiceLog();
+          }
+          editingNoteId = null;
+          render();
+        };
+        const cancelEditBtn = el('button', 'dictate-btn secondary', 'Cancel');
+        cancelEditBtn.type = 'button';
+        cancelEditBtn.onclick = () => { editingNoteId = null; render(); };
+        editRow.appendChild(saveEditBtn);
+        editRow.appendChild(cancelEditBtn);
+        box.appendChild(editRow);
+      } else {
+        if (entry.caughtYourEye) box.appendChild(el('div', 'caught-eye', entry.caughtYourEye));
+        if (entry.text) box.appendChild(el('div', null, entry.text));
+      }
+      const badgeRow = el('div', 'chip-row-readonly');
+      if (entry.submittedBy) badgeRow.appendChild(el('span', 'chip small', entry.submittedBy));
+      if (entry.bucket) badgeRow.appendChild(el('span', 'chip small bucket', entry.bucket));
+      if (entry.matter) badgeRow.appendChild(el('span', 'chip small', entry.matter));
+      if (entry.representationPeriod) badgeRow.appendChild(el('span', 'chip small', entry.representationPeriod));
+      if (entry.gateStatus) badgeRow.appendChild(el('span', 'chip small gate', entry.gateStatus));
+      if (entry.scope) badgeRow.appendChild(el('span', 'chip small', 'Scope: ' + entry.scope));
+      if (entry.intent) badgeRow.appendChild(el('span', 'chip small', 'Intent: ' + entry.intent));
+      const allTags = [...(entry.people || []), ...(entry.docTypes || []), ...(entry.phases || [])];
+      allTags.forEach(t => badgeRow.appendChild(el('span', 'chip small', t)));
+      box.appendChild(badgeRow);
+      panel.appendChild(box);
+    });
+  }
+
+  // ================= MASTER MIC (global floating capture) =================
+  function renderMasterMic(root) {
+    const fab = el('button', 'master-mic-fab', '\uD83C\uDF99\uFE0F');
+    fab.title = 'Quick capture a note from anywhere on the site';
+    fab.onclick = () => { masterMicOpen = true; render(); };
+    root.appendChild(fab);
+
+    if (masterMicOpen) {
+      const overlay = el('div', 'modal-overlay');
+      const modal = el('div', 'modal-box');
+      const closeBtn = el('button', 'modal-close', '\u00d7');
+      closeBtn.onclick = () => { masterMicOpen = false; render(); };
+      modal.appendChild(closeBtn);
+      modal.appendChild(el('div', 'panel-title', 'Quick Capture'));
+      modal.appendChild(buildCaptureForm(() => { masterMicOpen = false; render(); }, { tabContext: mainTab }));
+      overlay.appendChild(modal);
+      overlay.onclick = (e) => { if (e.target === overlay) { masterMicOpen = false; render(); } };
+      root.appendChild(overlay);
+    }
+  }
+
+  // ================= RENDER: CASE FOUNDATION (with sub-tabs) =================
+  function renderReliefBanner(panel) {
+    panel.appendChild(el('div', 'relief-banner', '<strong>Relief Sought</strong>' + RELIEF_SOUGHT));
+  }
+
+  function renderCounselTimeline(panel, entries) {
+    const t = document.createElement('table');
+    t.className = 'ref';
+    entries.forEach(e => {
+      const tr = document.createElement('tr');
+      const dateTd = document.createElement('td');
+      dateTd.style.fontWeight = 'bold';
+      dateTd.style.width = '160px';
+      dateTd.style.color = '#1F3864';
+      dateTd.textContent = e.date;
+      const textTd = document.createElement('td');
+      textTd.textContent = e.text;
+      tr.appendChild(dateTd); tr.appendChild(textTd);
+      t.appendChild(tr);
+    });
+    panel.appendChild(el('div', 'table-scroll')).appendChild(t);
+  }
+
+  function renderFoundationOverview(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Case Identifiers'));
+    const idTable = el('table', 'ref');
+    idTable.innerHTML = `
+      <tr><td style="font-weight:bold;width:220px;">District Court Case No.</td><td>${CASE_INFO.caseNo}</td></tr>
+      <tr><td style="font-weight:bold;">Court</td><td>${CASE_INFO.court}</td></tr>
+      <tr><td style="font-weight:bold;">Court of Appeals Case No.</td><td>${CASE_INFO.apCaseNo}</td></tr>
+      <tr><td style="font-weight:bold;">Case Type</td><td>${CASE_INFO.caseType}</td></tr>
+      <tr><td style="font-weight:bold;">Hearing Judge</td><td>${CASE_INFO.hearingJudge}</td></tr>
+      <tr><td style="font-weight:bold;">Case Management Judge</td><td>${CASE_INFO.caseMgmtJudge}</td></tr>
+      <tr><td style="font-weight:bold;">Petitioner</td><td>${CASE_INFO.petitioner}</td></tr>
+      <tr><td style="font-weight:bold;">Respondent</td><td>${CASE_INFO.respondent}</td></tr>
+    `;
+    panel.appendChild(el('div', 'table-scroll')).appendChild(idTable);
+
+    panel.appendChild(el('div', 'section-heading', "Petitioner's Counsel \u2014 Date First"));
+    renderCounselTimeline(panel, CASE_INFO.petCounselHistory);
+
+    panel.appendChild(el('div', 'section-heading', "Respondent's Counsel \u2014 Date First"));
+    renderCounselTimeline(panel, CASE_INFO.respCounselHistory);
+
+    panel.appendChild(el('div', 'section-heading', 'Staff/Paralegal Note'));
+    panel.appendChild(el('div', 'compat-note', CASE_INFO.staffCaveat));
+  }
+
+  function renderFoundationHistory(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Version History'));
+    panel.appendChild(el('div', 'compat-note', 'Full build log for this tracker \u2014 every version, in order, pulled out of the header so it is actually readable.'));
+    const t = document.createElement('table');
+    t.className = 'ref';
+    const headRow = document.createElement('tr');
+    headRow.innerHTML = '<th style="width:70px;">Version</th><th>What Changed</th>';
+    t.appendChild(headRow);
+    VERSION_HISTORY.forEach(entry => {
+      const m = entry.match(/^(v\d+)\s*\u2014\s*(.*)$/);
+      const tr = document.createElement('tr');
+      const vTd = document.createElement('td');
+      vTd.style.fontWeight = 'bold';
+      vTd.style.color = '#1F3864';
+      vTd.textContent = m ? m[1] : '\u2014';
+      const descTd = document.createElement('td');
+      descTd.textContent = m ? m[2] : entry;
+      tr.appendChild(vTd); tr.appendChild(descTd);
+      t.appendChild(tr);
+    });
+    panel.appendChild(el('div', 'table-scroll')).appendChild(t);
+  }
+
+  function renderFoundationJTMC(panel) {
+    panel.appendChild(el('div', 'section-heading', 'JTMC Stipulated Facts'));
+    const jtmcList = el('ul', 'plain');
+    JTMC_FACTS.forEach(f => jtmcList.appendChild(el('li', null, f.text + ` <span class="cite">${f.cite}</span>`)));
+    panel.appendChild(jtmcList);
+  }
+
+  function renderFoundationTimeline(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Rulings & Procedural Timeline'));
+    const tlTable = el('table', 'ref');
+    tlTable.innerHTML = '<tr><th style="width:150px;">Date</th><th>Event</th></tr>' +
+      TIMELINE.map(t => `<tr${t.flag ? ' class="flag"' : ''}><td>${t.date}</td><td>${t.event}</td></tr>`).join('');
+    panel.appendChild(el('div', 'table-scroll')).appendChild(tlTable);
+  }
+
+  function renderFoundationAuthorities(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Legal Authorities Table (Case-Wide)'));
+    const t = document.createElement('table');
+    t.className = 'ref';
+    const headRow = document.createElement('tr');
+    headRow.innerHTML = '<th style="width:220px;">Authority</th><th>Holding / Relevance</th><th style="width:180px;">Used In</th>';
+    t.appendChild(headRow);
+    LEGAL_AUTHORITIES_TABLE.forEach(a => {
+      const tr = document.createElement('tr');
+      const authTd = document.createElement('td');
+      authTd.style.fontWeight = 'bold';
+      authTd.textContent = a.authority;
+      const holdTd = document.createElement('td');
+      holdTd.textContent = a.holding + ' ';
+      holdTd.appendChild(buildCopyButton(a.holding, a.authority));
+      const usedTd = document.createElement('td');
+      usedTd.className = 'cite';
+      usedTd.textContent = a.usedIn;
+      tr.appendChild(authTd); tr.appendChild(holdTd); tr.appendChild(usedTd);
+      t.appendChild(tr);
+    });
+    panel.appendChild(el('div', 'table-scroll')).appendChild(t);
+  }
+
+  function renderFoundationGlossary(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Glossary'));
+    const t = document.createElement('table');
+    t.className = 'ref';
+    const headRow = document.createElement('tr');
+    headRow.innerHTML = '<th style="width:180px;">Term</th><th>Plain-Language Definition</th>';
+    t.appendChild(headRow);
+    GLOSSARY.forEach(g => {
+      const tr = document.createElement('tr');
+      const termTd = document.createElement('td');
+      termTd.style.fontWeight = 'bold';
+      termTd.textContent = g.term;
+      const defTd = document.createElement('td');
+      defTd.textContent = g.def;
+      tr.appendChild(termTd); tr.appendChild(defTd);
+      t.appendChild(tr);
+    });
+    panel.appendChild(el('div', 'table-scroll')).appendChild(t);
+  }
+
+  function renderFoundationFindings(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Findings Cross-Reference (Breadcrumb Table)'));
+    FINDINGS_XREF.forEach(group => {
+      const h = el('div', null, `<strong>${group.topic}</strong>`);
+      h.style.margin = '10px 0 6px 0';
+      panel.appendChild(h);
+      const t = document.createElement('table');
+      t.className = 'ref';
+      const headRow = document.createElement('tr');
+      headRow.innerHTML = '<th style="width:220px;">Source</th><th>Text</th><th style="width:140px;">Citation</th>';
+      t.appendChild(headRow);
+      group.rows.forEach(r => {
+        const tr = document.createElement('tr');
+        if (r.flagRow) tr.className = 'flag';
+        const sourceTd = document.createElement('td');
+        sourceTd.innerHTML = r.source + (r.discovery ? '<span class="discovery-badge">KEY FIND</span>' : '');
+        const textTd = document.createElement('td');
+        textTd.innerHTML = r.text + ' ';
+        textTd.appendChild(buildCopyButton(r.text, r.cite));
+        const citeTd = document.createElement('td');
+        citeTd.className = 'cite';
+        citeTd.textContent = r.cite;
+        tr.appendChild(sourceTd); tr.appendChild(textTd); tr.appendChild(citeTd);
+        t.appendChild(tr);
+      });
+      panel.appendChild(el('div', 'table-scroll')).appendChild(t);
+    });
+  }
+
+  function renderFoundation(panel) {
+    renderReliefBanner(panel);
+    const subtabs = el('div', 'subtabs');
+    const defs = [['overview','Overview'],['jtmc','JTMC Facts'],['timeline','Timeline'],['findings','Findings Cross-Reference'],['authorities','Legal Authorities'],['glossary','Glossary'],['history','Version History'],['ledger','Check-In Ledger']];
+    defs.forEach(([key,label]) => {
+      const t = el('div', 'subtab' + (foundationSubTab === key ? ' active' : ''), label);
+      t.onclick = () => { foundationSubTab = key; render(); };
+      subtabs.appendChild(t);
+    });
+    panel.appendChild(subtabs);
+    const inner = el('div');
+    inner.style.paddingTop = '14px';
+    if (foundationSubTab === 'overview') renderFoundationOverview(inner);
+    else if (foundationSubTab === 'jtmc') renderFoundationJTMC(inner);
+    else if (foundationSubTab === 'timeline') renderFoundationTimeline(inner);
+    else if (foundationSubTab === 'authorities') renderFoundationAuthorities(inner);
+    else if (foundationSubTab === 'glossary') renderFoundationGlossary(inner);
+    else if (foundationSubTab === 'history') renderFoundationHistory(inner);
+    else if (foundationSubTab === 'ledger') renderLedgerTab(inner);
+    else renderFoundationFindings(inner);
+    panel.appendChild(inner);
+  }
+
+  // ================= RENDER: ISSUE I (Law / Fact / Application / Conclusion) =================
+  function renderFactsList(items) {
+    const ul = el('ul', 'plain');
+    items.forEach(f => {
+      const li = el('li', null, f.text + ` <span class="cite">${f.cite}</span>`);
+      li.appendChild(buildCopyButton(f.text, f.cite));
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+  function renderTextList(items) {
+    const wrap = el('div');
+    items.forEach(t => wrap.appendChild(el('p', null, t)));
+    return wrap;
+  }
+
+  function renderIssueLaw(panel) {
+    panel.appendChild(el('div', 'compat-note', '<strong>Standard of Review:</strong> ' + ISSUE.standardOfReview));
+    panel.appendChild(el('div', 'section-heading', 'The Governing Legal Standard'));
+    panel.appendChild(renderTextList(LAW_TEXT));
+    panel.appendChild(el('div', 'section-heading', 'Governing Authorities'));
+    panel.appendChild(renderFactsList(AUTHORITIES));
+  }
+
+  function renderIssueFact(panel) {
+    panel.appendChild(el('div', 'section-heading', 'The Admitted Record'));
+    panel.appendChild(renderFactsList(FACTS));
+  }
+
+  async function renderIssueApplication(panel) {
+    const tabs = el('div', 'tabs');
+    Object.keys(LENSES).forEach(key => {
+      const tab = el('div', 'tab' + (key === issueLens ? ' active ' + key : ''), LENSES[key].label);
+      tab.onclick = () => { issueLens = key; render(); };
+      tabs.appendChild(tab);
+    });
+    panel.appendChild(tabs);
+
+    const lensPanel = el('div', 'panel');
+    const lens = LENSES[issueLens];
+    lensPanel.appendChild(el('div', 'panel-label ' + issueLens, lens.label));
+    lensPanel.appendChild(el('div', 'panel-title', lens.panelTitle));
+    lensPanel.appendChild(el('div', 'anchor ' + issueLens, '&ldquo;' + lens.anchor + '&rdquo;'));
+    const bodyWrap = el('div');
+    lens.body.forEach(p => bodyWrap.appendChild(el('p', null, p)));
+    lensPanel.appendChild(bodyWrap);
+
+    const badgeRow = el('div', 'badge-row');
+    badgeRow.appendChild(el('span', 'strength-badge', 'Strength: ' + STRENGTH.rank));
+    badgeRow.appendChild(el('span', 'strength-note', STRENGTH.note));
+    lensPanel.appendChild(badgeRow);
+
+    lensPanel.appendChild(el('div', 'section-heading', 'Your Notes \u2014 ' + lens.label + ' (type or dictate)'));
+    const textarea = document.createElement('textarea');
+    textarea.className = 'notesarea';
+    textarea.placeholder = 'Add your own notes for this lens...';
+    const status = el('div', 'notes-status', '');
+    const dictateRow = attachDictation(textarea, status, () => { saveIssueLensNote(issueLens, textarea.value, status); });
+    lensPanel.appendChild(dictateRow);
+    lensPanel.appendChild(textarea);
+    lensPanel.appendChild(status);
+    let saveTimer;
+    textarea.addEventListener('input', () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => saveIssueLensNote(issueLens, textarea.value, status), 600); });
+    textarea.value = (await storageGet('issue1_notes_' + issueLens)) || '';
+
+    panel.appendChild(lensPanel);
+  }
+  async function saveIssueLensNote(lens, text, statusEl) {
+    const ok = await storageSet('issue1_notes_' + lens, text);
+    statusEl.textContent = ok ? 'Saved' : 'Could not save';
+    setTimeout(() => { statusEl.textContent = ''; }, 1500);
+  }
+
+  function renderIssueConclusion(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Gate-Passed Conclusion'));
+    panel.appendChild(renderTextList(CONCLUSION_TEXT));
+  }
+
+  function renderIssueStressTest(panel) {
+    panel.appendChild(el('div', 'compat-note',
+      'Scratch space for stress-testing this issue \u2014 forward, backward, inside-out, upside-down, inverse. Nothing here is brief-ready by default; it feeds Application once it earns its place.'));
+    panel.appendChild(buildCaptureForm(() => render(), { presetIntent: 'Question / Open Item', tabContext: 'issue1-stresstest', contextNote: 'Issue I Stress-Test' }));
+    const related = voiceLog.filter(n => n.tabContext === 'issue1-stresstest');
+    panel.appendChild(el('div', 'section-heading', `Stress-Test Notes (${related.length})`));
+    related.forEach(entry => {
+      const box = el('div', 'voice-entry');
+      if (entry.caughtYourEye) box.appendChild(el('div', 'caught-eye', entry.caughtYourEye));
+      if (entry.text) box.appendChild(el('div', null, entry.text));
+      panel.appendChild(box);
+    });
+  }
+
+  async function renderIssue(panel) {
+    panel.appendChild(el('div', null, `<strong style="font-size:16px;">${ISSUE.title}</strong><div style="font-style:italic;margin-top:4px;">${ISSUE.statement}</div>`));
+    const subtabs = el('div', 'subtabs');
+    const defs = [['law','Law'],['fact','Fact'],['application','Application'],['conclusion','Conclusion'],['stresstest','Stress-Test']];
+    defs.forEach(([key,label]) => {
+      const t = el('div', 'subtab' + (issueSubTab === key ? ' active' : ''), label);
+      t.onclick = () => { issueSubTab = key; render(); };
+      subtabs.appendChild(t);
+    });
+    panel.appendChild(subtabs);
+    const inner = el('div');
+    inner.style.paddingTop = '14px';
+    if (issueSubTab === 'law') renderIssueLaw(inner);
+    else if (issueSubTab === 'fact') renderIssueFact(inner);
+    else if (issueSubTab === 'application') await renderIssueApplication(inner);
+    else if (issueSubTab === 'conclusion') renderIssueConclusion(inner);
+    else renderIssueStressTest(inner);
+    panel.appendChild(inner);
+    panel.appendChild(el('div', 'footnote', 'Template built from Issue I. Additional issues can be added using this same Law\u2192Fact\u2192Application\u2192Conclusion structure.'));
+  }
+
+  // ================= RENDER: CBA FEE ARBITRATION =================
+  function renderCBAInfo(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Case Identifiers'));
+    const t = el('table', 'ref');
+    t.innerHTML = `
+      <tr><td style="font-weight:bold;width:200px;">Case</td><td>${CBA_INFO.caseRef}</td></tr>
+      <tr><td style="font-weight:bold;">Party</td><td>${CBA_INFO.party}</td></tr>
+      <tr><td style="font-weight:bold;">Attorney Party</td><td>${CBA_INFO.attorneyParty}</td></tr>
+      <tr><td style="font-weight:bold;">Arbitrator</td><td>${CBA_INFO.arbitrator}</td></tr>
+      <tr><td style="font-weight:bold;">Arbitrator's Paralegal</td><td>${CBA_INFO.arbitratorParalegal}</td></tr>
+      <tr class="flag"><td style="font-weight:bold;">Hearing</td><td>${CBA_INFO.hearingDate}</td></tr>
+      <tr class="flag"><td style="font-weight:bold;">Key Deadlines</td><td>${CBA_INFO.keyDeadlines}</td></tr>
+      <tr><td style="font-weight:bold;">Exhibit Labeling</td><td>${CBA_INFO.exhibitLabeling}</td></tr>
+    `;
+    panel.appendChild(el('div', 'table-scroll')).appendChild(t);
+  }
+  function renderCBALaw(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Governing Framework'));
+    panel.appendChild(renderTextList(CBA_LAW_TEXT));
+    panel.appendChild(el('div', 'section-heading', 'Authorities'));
+    panel.appendChild(renderFactsList(CBA_AUTHORITIES));
+  }
+  function renderCBAFact(panel) {
+    panel.appendChild(el('div', 'section-heading', 'The Record'));
+    panel.appendChild(renderFactsList(CBA_FACTS));
+  }
+  async function renderCBAApplication(panel) {
+    const tabs = el('div', 'tabs');
+    Object.keys(CBA_LENSES).forEach(key => {
+      const cls = key === 'attorneyParty' ? 'opposing' : (key === 'arbitrator' ? 'judge' : (key === 'inversion' ? 'inversion' : 'attorney'));
+      const tab = el('div', 'tab' + (key === cbaLens ? ' active ' + cls : ''), CBA_LENSES[key].label);
+      tab.onclick = () => { cbaLens = key; render(); };
+      tabs.appendChild(tab);
+    });
+    panel.appendChild(tabs);
+    const lensPanel = el('div', 'panel');
+    const lens = CBA_LENSES[cbaLens];
+    const cls = cbaLens === 'attorneyParty' ? 'opposing' : (cbaLens === 'arbitrator' ? 'judge' : (cbaLens === 'inversion' ? 'inversion' : 'attorney'));
+    lensPanel.appendChild(el('div', 'panel-label ' + cls, lens.label));
+    lensPanel.appendChild(el('div', 'panel-title', lens.panelTitle));
+    lensPanel.appendChild(el('div', 'anchor ' + cls, '&ldquo;' + lens.anchor + '&rdquo;'));
+    const bodyWrap = el('div');
+    lens.body.forEach(p => bodyWrap.appendChild(el('p', null, p)));
+    lensPanel.appendChild(bodyWrap);
+    const badgeRow = el('div', 'badge-row');
+    badgeRow.appendChild(el('span', 'strength-badge', 'Strength: ' + CBA_STRENGTH.rank));
+    badgeRow.appendChild(el('span', 'strength-note', CBA_STRENGTH.note));
+    lensPanel.appendChild(badgeRow);
+    panel.appendChild(lensPanel);
+  }
+  function renderCBAConclusion(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Requested Resolution'));
+    panel.appendChild(renderTextList(CBA_CONCLUSION_TEXT));
+  }
+  function renderCBAStressTest(panel) {
+    panel.appendChild(el('div', 'compat-note', 'Scratch space for stress-testing the CBA fee claim before the 9/25/26 Position Statement deadline.'));
+    panel.appendChild(buildCaptureForm(() => render(), { presetIntent: 'Question / Open Item', presetMatter: 'CBA Fee Arbitration (Evich v. White)', tabContext: 'cba-stresstest', contextNote: 'CBA Stress-Test' }));
+    const related = voiceLog.filter(n => n.tabContext === 'cba-stresstest');
+    panel.appendChild(el('div', 'section-heading', `Stress-Test Notes (${related.length})`));
+    related.forEach(entry => {
+      const box = el('div', 'voice-entry');
+      if (entry.caughtYourEye) box.appendChild(el('div', 'caught-eye', entry.caughtYourEye));
+      if (entry.text) box.appendChild(el('div', null, entry.text));
+      panel.appendChild(box);
+    });
+  }
+  async function renderCBA(panel) {
+    panel.appendChild(el('div', null, `<strong style="font-size:16px;">CBA Fee Arbitration \u2014 Evich v. White</strong><div style="font-style:italic;margin-top:4px;">${CBA_STATEMENT}</div>`));
+    renderCBACountdownBanner(panel);
+    const subtabs = el('div', 'subtabs');
+    const defs = [['info','Case Info'],['law','Law'],['fact','Fact'],['application','Application'],['conclusion','Conclusion'],['stresstest','Stress-Test']];
+    defs.forEach(([key,label]) => {
+      const t = el('div', 'subtab' + (cbaSubTab === key ? ' active' : ''), label);
+      t.onclick = () => { cbaSubTab = key; render(); };
+      subtabs.appendChild(t);
+    });
+    panel.appendChild(subtabs);
+    const inner = el('div');
+    inner.style.paddingTop = '14px';
+    if (cbaSubTab === 'info') renderCBAInfo(inner);
+    else if (cbaSubTab === 'law') renderCBALaw(inner);
+    else if (cbaSubTab === 'fact') renderCBAFact(inner);
+    else if (cbaSubTab === 'application') await renderCBAApplication(inner);
+    else if (cbaSubTab === 'conclusion') renderCBAConclusion(inner);
+    else renderCBAStressTest(inner);
+    panel.appendChild(inner);
+    panel.appendChild(el('div', 'footnote', 'Built from verified CBA submission documents. The $62,350.98 vs. $80,000 discrepancy (flagged in Fact) should be resolved before the 9/25/26 filing.'));
+  }
+
+  // ================= RENDER: OARC (Foundation only, pending written confirmation) =================
+  function renderOARC(panel) {
+    panel.appendChild(el('div', null, '<strong style="font-size:16px;">OARC Complaint</strong>'));
+    panel.appendChild(el('div', 'compat-note',
+      '\u26a0\ufe0f Everything below (except the phone number, independently verified) comes from a phone call with OARC intake staff, not written confirmation. ' +
+      'This section is intentionally limited until a written response is obtained \u2014 see recommendation below. Stephanie is actively developing this matter.'));
+    panel.appendChild(el('div', 'section-heading', 'Case Identifiers'));
+    const t = el('table', 'ref');
+    t.innerHTML = `
+      <tr><td style="font-weight:bold;width:200px;">Case Number</td><td>${OARC_INFO.caseNumber}</td></tr>
+      <tr><td style="font-weight:bold;">Contact</td><td>${OARC_INFO.contact}</td></tr>
+      <tr class="flag"><td style="font-weight:bold;">Status</td><td>${OARC_INFO.status}</td></tr>
+      <tr><td style="font-weight:bold;">Mailing Address (for written follow-up)</td><td>${OARC_INFO.mailingAddress}</td></tr>
+      <tr><td style="font-weight:bold;">Active Owner</td><td>${OARC_INFO.activeOwner}</td></tr>
+    `;
+    panel.appendChild(el('div', 'table-scroll')).appendChild(t);
+    panel.appendChild(el('div', 'section-heading', 'What the Law Actually Provides (verified, general)'));
+    panel.appendChild(renderTextList(OARC_LAW_NOTES));
+    panel.appendChild(el('div', 'section-heading', 'Notes for this Matter'));
+    panel.appendChild(buildCaptureForm(() => render(), { presetMatter: 'OARC Complaint (#26-466)', tabContext: 'oarc' }));
+    const related = voiceLog.filter(n => n.matter === 'OARC Complaint (#26-466)');
+    related.forEach(entry => {
+      const box = el('div', 'voice-entry');
+      if (entry.caughtYourEye) box.appendChild(el('div', 'caught-eye', entry.caughtYourEye));
+      if (entry.text) box.appendChild(el('div', null, entry.text));
+      panel.appendChild(box);
+    });
+  }
+
+  // ================= RENDER: APPEAL REQUIREMENTS =================
+  let appealReqSubTab = 'steps';
+  function renderAppealReqSteps(panel) {
+    panel.appendChild(el('div', 'compat-note', 'Every step of the appeal, in order, with its own deadline. Items in yellow/red need your attention or verification.'));
+    const t = document.createElement('table');
+    t.className = 'ref';
+    const headRow = document.createElement('tr');
+    headRow.innerHTML = '<th style="width:200px;">Step</th><th>Description</th><th style="width:130px;">Status</th><th style="width:130px;">Date</th>';
+    t.appendChild(headRow);
+    APPEAL_STEPS.forEach(s => {
+      const tr = document.createElement('tr');
+      if (s.flag) tr.className = 'flag';
+      const stepTd = document.createElement('td'); stepTd.style.fontWeight = 'bold'; stepTd.textContent = s.step;
+      const descTd = document.createElement('td'); descTd.textContent = s.desc;
+      const statusTd = document.createElement('td'); statusTd.textContent = s.status;
+      const dateTd = document.createElement('td'); dateTd.className = 'cite'; dateTd.textContent = s.date;
+      tr.appendChild(stepTd); tr.appendChild(descTd); tr.appendChild(statusTd); tr.appendChild(dateTd);
+      t.appendChild(tr);
+    });
+    panel.appendChild(el('div', 'table-scroll')).appendChild(t);
+  }
+  function renderAppealReqFormatting(panel) {
+    panel.appendChild(el('div', 'compat-note', 'Colorado Appellate Rules (C.A.R.) only \u2014 federal rules never apply to a Colorado state appeal.'));
+    const t = document.createElement('table');
+    t.className = 'ref';
+    const headRow = document.createElement('tr');
+    headRow.innerHTML = '<th style="width:180px;">Rule</th><th>Requirement</th><th style="width:180px;">Citation</th>';
+    t.appendChild(headRow);
+    APPEAL_FORMATTING.forEach(f => {
+      const tr = document.createElement('tr');
+      const ruleTd = document.createElement('td'); ruleTd.style.fontWeight = 'bold'; ruleTd.textContent = f.rule;
+      const reqTd = document.createElement('td'); reqTd.textContent = f.requirement;
+      const citeTd = document.createElement('td'); citeTd.className = 'cite'; citeTd.textContent = f.cite;
+      tr.appendChild(ruleTd); tr.appendChild(reqTd); tr.appendChild(citeTd);
+      t.appendChild(tr);
+    });
+    panel.appendChild(el('div', 'table-scroll')).appendChild(t);
+  }
+  function renderAppealReqChecklist(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Required Sections \u2014 Opening/Answer Brief (C.A.R. 28)'));
+    const ul = el('ul', 'plain');
+    APPEAL_BRIEF_CHECKLIST.forEach(item => ul.appendChild(el('li', null, item)));
+    panel.appendChild(ul);
+  }
+  // ================= RENDER: STEPHANIE'S WORLD =================
+  // ================= LABEL TRACKER =================
+  function renderLabelTracker(panel) {
+    panel.appendChild(el('div', null, '<strong style="font-size:16px;">Label Tracker</strong><div style="font-style:italic;margin-top:4px;">Cross-references exhibit/document labels across the different numbering systems in this case \u2014 built after the Exhibit 8/48 citation error, so the same mismatch cannot happen silently again.</div>'));
+    panel.appendChild(el('div', 'compat-note',
+      'Three numbering systems exist in this case: Antolinez\u2019s pre-trial exhibit numbering, White\u2019s final Admitted numbering (used at the 10/28/2025 hearing), and the CBA arbitration\u2019s own scheme (your exhibits: numbers, White\u2019s: letters). ' +
+      'A row is flagged automatically if the Pre-Trial and Final Admitted numbers do not match \u2014 that mismatch is exactly what caused the Exhibit 8/48 error.'));
+
+    const form = el('div', 'ledger-form');
+    form.appendChild(el('div', null, '<strong>Add Exhibit / Document</strong>'));
+    const grid = el('div', 'form-grid');
+    const descField = el('div', 'form-field'); descField.appendChild(el('label', null, 'Description'));
+    const descInput = document.createElement('input');
+    const descStatus = el('div', 'notes-status', '');
+    descField.appendChild(attachDictation(descInput, descStatus)); descField.appendChild(descInput); descField.appendChild(descStatus);
+    grid.appendChild(descField);
+
+    const preField = el('div', 'form-field'); preField.appendChild(el('label', null, 'Pre-Trial Number (Antolinez)'));
+    const preInput = document.createElement('input'); preField.appendChild(preInput); grid.appendChild(preField);
+
+    const finalField = el('div', 'form-field'); finalField.appendChild(el('label', null, 'Final Admitted Number (White / Hearing)'));
+    const finalInput = document.createElement('input'); finalField.appendChild(finalInput); grid.appendChild(finalField);
+
+    const cbaField = el('div', 'form-field'); cbaField.appendChild(el('label', null, 'CBA Label (number or letter)'));
+    const cbaInput = document.createElement('input'); cbaField.appendChild(cbaInput); grid.appendChild(cbaField);
+
+    const matterField = el('div', 'form-field'); matterField.appendChild(el('label', null, 'Matter'));
+    const matterSelect = document.createElement('select'); matterSelect.innerHTML = MATTER_TAGS.map(m => `<option value="${m}">${m}</option>`).join('');
+    matterField.appendChild(matterSelect); grid.appendChild(matterField);
+
+    const notesField = el('div', 'form-field'); notesField.appendChild(el('label', null, 'Notes'));
+    const notesInput = document.createElement('input'); notesField.appendChild(notesInput); grid.appendChild(notesField);
+    form.appendChild(grid);
+
+    const addBtn = el('button', 'dictate-btn', 'Add Entry');
+    addBtn.type = 'button';
+    addBtn.onclick = async () => {
+      if (!descInput.value.trim()) return;
+      labelEntries.unshift({
+        id: genId(),
+        description: descInput.value.trim(),
+        preTrial: preInput.value.trim(),
+        finalAdmitted: finalInput.value.trim(),
+        cbaLabel: cbaInput.value.trim(),
+        matter: matterSelect.value,
+        notes: notesInput.value.trim()
+      });
+      await saveLabelEntries();
+      render();
+    };
+    form.appendChild(addBtn);
+    panel.appendChild(form);
+
+    panel.appendChild(el('div', 'section-heading', `Tracked Exhibits/Documents (${labelEntries.length})`));
+    if (labelEntries.length === 0) {
+      panel.appendChild(el('div', 'notes-status', 'None tracked yet.'));
+      return;
+    }
+    const table = el('table', 'ref');
+    table.innerHTML = '<tr><th>Description</th><th>Pre-Trial #</th><th>Final Admitted #</th><th>CBA Label</th><th>Matter</th><th>Notes</th><th></th></tr>';
+    labelEntries.forEach(entry => {
+      const mismatch = entry.preTrial && entry.finalAdmitted && entry.preTrial !== entry.finalAdmitted;
+      if (editingLabelId === entry.id) {
+        const tr = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 7;
+        const eGrid = el('div', 'form-grid');
+        const mk = (labelText, val) => { const f = el('div','form-field'); f.appendChild(el('label', null, labelText)); const inp = document.createElement('input'); inp.value = val || ''; f.appendChild(inp); return { f, inp }; };
+        const descE = mk('Description', entry.description);
+        const preE = mk('Pre-Trial Number', entry.preTrial);
+        const finalE = mk('Final Admitted Number', entry.finalAdmitted);
+        const cbaE = mk('CBA Label', entry.cbaLabel);
+        const notesE = mk('Notes', entry.notes);
+        const matterF = el('div', 'form-field'); matterF.appendChild(el('label', null, 'Matter'));
+        const matterS = document.createElement('select');
+        matterS.innerHTML = MATTER_TAGS.map(m => `<option value="${m}"${m === entry.matter ? ' selected' : ''}>${m}</option>`).join('');
+        matterF.appendChild(matterS);
+        [descE.f, preE.f, finalE.f, cbaE.f, matterF, notesE.f].forEach(f => eGrid.appendChild(f));
+        cell.appendChild(eGrid);
+        const btnRow = el('div', 'dictate-row');
+        const saveBtn = el('button', 'dictate-btn', 'Save Changes');
+        saveBtn.type = 'button';
+        saveBtn.onclick = async () => {
+          entry.description = descE.inp.value.trim();
+          entry.preTrial = preE.inp.value.trim();
+          entry.finalAdmitted = finalE.inp.value.trim();
+          entry.cbaLabel = cbaE.inp.value.trim();
+          entry.matter = matterS.value;
+          entry.notes = notesE.inp.value.trim();
+          await saveLabelEntries();
+          editingLabelId = null;
+          render();
+        };
+        const cancelBtn = el('button', 'dictate-btn secondary', 'Cancel');
+        cancelBtn.type = 'button';
+        cancelBtn.onclick = () => { editingLabelId = null; render(); };
+        btnRow.appendChild(saveBtn); btnRow.appendChild(cancelBtn);
+        cell.appendChild(btnRow);
+        tr.appendChild(cell);
+        table.appendChild(tr);
+        return;
+      }
+      const tr = document.createElement('tr');
+      if (mismatch) tr.className = 'flag';
+      tr.innerHTML = `<td>${entry.description}${mismatch ? '<span class="discovery-badge">MISMATCH</span>' : ''}</td><td>${entry.preTrial || ''}</td><td>${entry.finalAdmitted || ''}</td><td>${entry.cbaLabel || ''}</td><td class="cite">${entry.matter || ''}</td><td>${entry.notes || ''}</td>`;
+      const btnTd = document.createElement('td');
+      const editBtn = el('button', 'delete-btn', 'Edit');
+      editBtn.style.color = '#1F3864';
+      editBtn.onclick = () => { editingLabelId = entry.id; render(); };
+      btnTd.appendChild(editBtn);
+      const delBtn = el('button', 'delete-btn', 'Delete');
+      delBtn.onclick = async () => { if (!confirm('Delete this label tracker entry permanently? This cannot be undone.')) return; labelEntries = labelEntries.filter(e => e.id !== entry.id); await saveLabelEntries(); render(); };
+      btnTd.appendChild(delBtn);
+      tr.appendChild(btnTd);
+      table.appendChild(tr);
+    });
+    panel.appendChild(el('div', 'table-scroll')).appendChild(table);
+  }
+
+  function renderStephanieWorld(panel) {
+    panel.appendChild(el('div', null, '<strong style="font-size:16px;">Stephanie\'s World</strong>'));
+    panel.appendChild(el('div', 'compat-note',
+      'This is Stephanie\'s own space \u2014 her sources, her links, entirely separate from the verified JBITS baseline in Case Foundation. Nothing here needs to match anyone else\'s system. ' +
+      'The sticky-note whiteboard and auto-checkpointing are still being built \u2014 for now, this holds her own linked folders/documents.'));
+
+    const form = el('div', 'ledger-form');
+    form.appendChild(el('div', null, '<strong>Add a Source</strong>'));
+    const grid = el('div', 'form-grid');
+    const labelField = el('div', 'form-field'); labelField.appendChild(el('label', null, 'Label (whatever makes sense to you)'));
+    const labelInput = document.createElement('input');
+    const labelDictateStatus = el('div', 'notes-status', '');
+    labelField.appendChild(attachDictation(labelInput, labelDictateStatus)); labelField.appendChild(labelInput); labelField.appendChild(labelDictateStatus);
+    grid.appendChild(labelField);
+    const linkField = el('div', 'form-field'); linkField.appendChild(el('label', null, 'Link (Drive, or anywhere else)'));
+    const linkInput = document.createElement('input'); linkInput.placeholder = 'https://...';
+    linkField.appendChild(linkInput);
+    grid.appendChild(linkField);
+    form.appendChild(grid);
+    const addBtn = el('button', 'dictate-btn', 'Add Source');
+    addBtn.type = 'button';
+    addBtn.onclick = async () => {
+      if (!labelInput.value.trim() && !linkInput.value.trim()) return;
+      stephanieLinks.unshift({ id: genId(), label: labelInput.value.trim() || '(untitled)', link: linkInput.value.trim(), added: new Date().toLocaleString() });
+      await saveStephanieLinks();
+      render();
+    };
+    form.appendChild(addBtn);
+    panel.appendChild(form);
+
+    panel.appendChild(el('div', 'section-heading', `Her Sources (${stephanieLinks.length})`));
+    if (stephanieLinks.length === 0) panel.appendChild(el('div', 'notes-status', 'Nothing added yet.'));
+    stephanieLinks.forEach(entry => {
+      const box = el('div', 'voice-entry');
+      if (editingStephanieId === entry.id) {
+        const labelInp = document.createElement('input'); labelInp.className = 'notesinput'; labelInp.value = entry.label;
+        box.appendChild(labelInp);
+        const linkInp = document.createElement('input'); linkInp.className = 'notesinput'; linkInp.style.marginTop = '6px'; linkInp.value = entry.link || '';
+        box.appendChild(linkInp);
+        const btnRow = el('div', 'dictate-row');
+        btnRow.style.marginTop = '8px';
+        const saveBtn = el('button', 'dictate-btn', 'Save Changes');
+        saveBtn.type = 'button';
+        saveBtn.onclick = async () => {
+          entry.label = labelInp.value.trim() || '(untitled)';
+          entry.link = linkInp.value.trim();
+          await saveStephanieLinks();
+          editingStephanieId = null;
+          render();
+        };
+        const cancelBtn = el('button', 'dictate-btn secondary', 'Cancel');
+        cancelBtn.type = 'button';
+        cancelBtn.onclick = () => { editingStephanieId = null; render(); };
+        btnRow.appendChild(saveBtn); btnRow.appendChild(cancelBtn);
+        box.appendChild(btnRow);
+        panel.appendChild(box);
+        return;
+      }
+      const meta = el('div', 'meta');
+      meta.appendChild(el('span', null, entry.label + ' \u2014 ' + entry.added));
+      const btnGroup = el('span', null);
+      const editBtn = el('button', 'delete-btn', 'Edit');
+      editBtn.style.color = '#1F3864';
+      editBtn.onclick = () => { editingStephanieId = entry.id; render(); };
+      btnGroup.appendChild(editBtn);
+      const delBtn = el('button', 'delete-btn', 'Delete');
+      delBtn.onclick = async () => { if (!confirm('Delete this source permanently? This cannot be undone.')) return; stephanieLinks = stephanieLinks.filter(e => e.id !== entry.id); await saveStephanieLinks(); render(); };
+      btnGroup.appendChild(delBtn);
+      meta.appendChild(btnGroup);
+      box.appendChild(meta);
+      if (entry.link) {
+        const linkRow = el('div', 'dictate-row');
+        const openLink = document.createElement('a');
+        openLink.className = 'drive-link'; openLink.href = entry.link; openLink.target = '_blank'; openLink.rel = 'noopener'; openLink.textContent = entry.link;
+        linkRow.appendChild(openLink);
+        linkRow.appendChild(buildPreviewButton(entry.link));
+        box.appendChild(linkRow);
+      }
+      panel.appendChild(box);
+    });
+
+    panel.appendChild(el('div', 'section-heading', 'Her Notes (voice-enabled, same as everywhere else)'));
+    panel.appendChild(buildCaptureForm(() => render(), { defaultSubmittedBy: 'Stephanie', tabContext: 'stephanies-world' }));
+    const related = voiceLog.filter(n => n.tabContext === 'stephanies-world');
+    related.forEach(entry => {
+      const box = el('div', 'voice-entry');
+      if (entry.caughtYourEye) box.appendChild(el('div', 'caught-eye', entry.caughtYourEye));
+      if (entry.text) box.appendChild(el('div', null, entry.text));
+      panel.appendChild(box);
+    });
+  }
+
+  function renderAppealRequirements(panel) {
+    panel.appendChild(el('div', null, '<strong style="font-size:16px;">Requirements for Filing an Appeal</strong><div style="font-style:italic;margin-top:4px;">Every step, deadline, and formatting rule \u2014 all Colorado C.A.R., verified this session.</div>'));
+    const subtabs = el('div', 'subtabs');
+    const defs = [['steps','Steps & Deadlines'],['formatting','Formatting Rules'],['checklist','Document Checklist']];
+    defs.forEach(([key,label]) => {
+      const t = el('div', 'subtab' + (appealReqSubTab === key ? ' active' : ''), label);
+      t.onclick = () => { appealReqSubTab = key; render(); };
+      subtabs.appendChild(t);
+    });
+    panel.appendChild(subtabs);
+    const inner = el('div');
+    inner.style.paddingTop = '14px';
+    if (appealReqSubTab === 'steps') renderAppealReqSteps(inner);
+    else if (appealReqSubTab === 'formatting') renderAppealReqFormatting(inner);
+    else renderAppealReqChecklist(inner);
+    panel.appendChild(inner);
+    panel.appendChild(el('div', 'footnote', 'Word limits and formatting confirmed directly against C.A.R. 28(g), C.A.R. 32, and the official Colorado Courts pro se Opening Brief Instructions \u2014 not assumed from memory.'));
+  }
+
+  // ================= RENDER: CHECK-IN LEDGER =================
+  function renderDocLinkProgress(panel) {
+    const pct = docLinkProgress.target > 0 ? Math.min(100, Math.round((docLinkProgress.count / docLinkProgress.target) * 100)) : 0;
+    const box = el('div', 'ledger-form');
+    box.appendChild(el('div', null, '<strong>Document Linking Progress</strong>'));
+    box.appendChild(el('div', 'compat-note', 'A manual, one-by-one tally as you go through and link source documents into this tracker \u2014 this counts on your say-so only, it does not scan Drive or count anything automatically.'));
+
+    const bigLine = el('div', null, `${docLinkProgress.count} / ${docLinkProgress.target} linked (${pct}%)`);
+    bigLine.style.fontSize = '20px';
+    bigLine.style.fontWeight = 'bold';
+    bigLine.style.color = '#1F3864';
+    bigLine.style.margin = '6px 0 10px 0';
+    box.appendChild(bigLine);
+
+    const barOuter = el('div', null);
+    barOuter.style.background = '#ddd'; barOuter.style.borderRadius = '6px'; barOuter.style.height = '10px'; barOuter.style.overflow = 'hidden'; barOuter.style.marginBottom = '12px';
+    const barInner = el('div', null);
+    barInner.style.background = '#4C7A4C'; barInner.style.height = '100%'; barInner.style.width = pct + '%';
+    barOuter.appendChild(barInner);
+    box.appendChild(barOuter);
+
+    const row = el('div', 'dictate-row');
+    const minusBtn = el('button', 'dictate-btn secondary', '\u2212 1 (undo)');
+    minusBtn.type = 'button';
+    minusBtn.onclick = async () => { docLinkProgress.count = Math.max(0, docLinkProgress.count - 1); await saveDocLinkProgress(); render(); };
+    row.appendChild(minusBtn);
+    const plusBtn = el('button', 'dictate-btn', '+ 1 Linked');
+    plusBtn.type = 'button';
+    plusBtn.onclick = async () => { docLinkProgress.count = docLinkProgress.count + 1; await saveDocLinkProgress(); render(); };
+    row.appendChild(plusBtn);
+    box.appendChild(row);
+
+    const grid = el('div', 'form-grid');
+    const countField = el('div', 'form-field'); countField.appendChild(el('label', null, 'Set Count Directly'));
+    const countInput = document.createElement('input'); countInput.type = 'number'; countInput.min = '0'; countInput.value = docLinkProgress.count;
+    countField.appendChild(countInput); grid.appendChild(countField);
+    const targetField = el('div', 'form-field'); targetField.appendChild(el('label', null, 'Target Files Expected'));
+    const targetInput = document.createElement('input'); targetInput.type = 'number'; targetInput.min = '1'; targetInput.value = docLinkProgress.target;
+    targetField.appendChild(targetInput); grid.appendChild(targetField);
+    box.appendChild(grid);
+
+    const saveRow = el('div', 'dictate-row');
+    const saveBtn = el('button', 'dictate-btn', 'Save Count / Target');
+    saveBtn.type = 'button';
+    saveBtn.onclick = async () => {
+      docLinkProgress.count = Math.max(0, parseInt(countInput.value, 10) || 0);
+      docLinkProgress.target = Math.max(1, parseInt(targetInput.value, 10) || 1);
+      await saveDocLinkProgress();
+      render();
+    };
+    saveRow.appendChild(saveBtn);
+    const resetBtn = el('button', 'dictate-btn secondary', 'Reset Count to 0');
+    resetBtn.type = 'button';
+    resetBtn.onclick = async () => {
+      if (!confirm('Reset the linked-document count back to 0? The target stays the same. This cannot be undone.')) return;
+      docLinkProgress.count = 0;
+      await saveDocLinkProgress();
+      render();
+    };
+    saveRow.appendChild(resetBtn);
+    box.appendChild(saveRow);
+
+    panel.appendChild(box);
+  }
+
+  function renderLedgerTab(panel) {
+    renderDocLinkProgress(panel);
+    panel.appendChild(el('div', 'compat-note',
+      'Metadata ledger only \u2014 the actual filed documents live in Google Drive (view-only links), never uploaded or deleted here. ' +
+      'Cross-check each entry against the District Court filing spreadsheet, then mark it Checked In.'));
+
+    const form = el('div', 'ledger-form');
+    form.appendChild(el('div', null, '<strong>Add Ledger Entry</strong>'));
+    const grid = el('div', 'form-grid');
+    const filingIdField = el('div', 'form-field'); filingIdField.appendChild(el('label', null, 'Filing ID')); const filingIdInput = document.createElement('input'); filingIdField.appendChild(filingIdInput); grid.appendChild(filingIdField);
+    const dateField = el('div', 'form-field'); dateField.appendChild(el('label', null, 'Date Filed')); const dateInput = document.createElement('input'); dateInput.type = 'date'; dateField.appendChild(dateInput); grid.appendChild(dateField);
+    const titleField = el('div', 'form-field'); titleField.appendChild(el('label', null, 'Document Title')); const titleInput = document.createElement('input'); const titleDictateStatus = el('div','notes-status',''); titleField.appendChild(attachDictation(titleInput, titleDictateStatus)); titleField.appendChild(titleInput); titleField.appendChild(titleDictateStatus); grid.appendChild(titleField);
+    const partyField = el('div', 'form-field'); partyField.appendChild(el('label', null, 'Filing Party')); const partyInput = document.createElement('input'); const partyDictateStatus = el('div','notes-status',''); partyField.appendChild(attachDictation(partyInput, partyDictateStatus)); partyField.appendChild(partyInput); partyField.appendChild(partyDictateStatus); grid.appendChild(partyField);
+    const typeField = el('div', 'form-field'); typeField.appendChild(el('label', null, 'Document Type')); const typeSelect = document.createElement('select'); typeSelect.innerHTML = DOCTYPE_TAGS.map(t => `<option value="${t}">${t}</option>`).join(''); typeField.appendChild(typeSelect); grid.appendChild(typeField);
+    const statusField = el('div', 'form-field'); statusField.appendChild(el('label', null, 'Status')); const statusSelect = document.createElement('select'); statusSelect.innerHTML = LEDGER_STATUS.map(s => `<option value="${s}">${s}</option>`).join(''); statusField.appendChild(statusSelect); grid.appendChild(statusField);
+    const matterField = el('div', 'form-field'); matterField.appendChild(el('label', null, 'Matter')); const matterSelect = document.createElement('select'); matterSelect.innerHTML = MATTER_TAGS.map(m => `<option value="${m}">${m}</option>`).join(''); matterField.appendChild(matterSelect); grid.appendChild(matterField);
+    const linkField = el('div', 'form-field'); linkField.appendChild(el('label', null, 'Google Drive Link (view-only)')); const linkInput = document.createElement('input'); linkInput.placeholder = 'https://drive.google.com/...'; linkField.appendChild(linkInput); grid.appendChild(linkField);
+    form.appendChild(grid);
+    const addBtn = el('button', 'dictate-btn', 'Add Entry');
+    addBtn.type = 'button';
+    addBtn.onclick = async () => {
+      if (!titleInput.value.trim()) return;
+      ledgerEntries.unshift({
+        id: genId(), filingId: filingIdInput.value.trim(), date: dateInput.value, title: titleInput.value.trim(),
+        party: partyInput.value.trim(), docType: typeSelect.value, status: statusSelect.value, matter: matterSelect.value, link: linkInput.value.trim()
+      });
+      await saveLedger();
+      render();
+    };
+    form.appendChild(addBtn);
+    panel.appendChild(form);
+
+    panel.appendChild(el('div', 'section-heading', `Ledger (${ledgerEntries.length} entries)`));
+    if (ledgerEntries.length === 0) {
+      panel.appendChild(el('div', 'notes-status', 'No entries yet.'));
+      return;
+    }
+    const table = el('table', 'ref');
+    let rows = '<tr><th>Filing ID</th><th>Date</th><th>Title</th><th>Party</th><th>Type</th><th>Matter</th><th>Status</th><th>Link</th><th></th></tr>';
+    table.innerHTML = rows;
+    ledgerEntries.forEach(entry => {
+      if (editingLedgerId === entry.id) {
+        const tr = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 9;
+        const eGrid = el('div', 'form-grid');
+        const mk = (labelText, val, type) => { const f = el('div','form-field'); f.appendChild(el('label', null, labelText)); const inp = document.createElement('input'); if (type) inp.type = type; inp.value = val || ''; f.appendChild(inp); return { f, inp }; };
+        const filingE = mk('Filing ID', entry.filingId);
+        const dateE = mk('Date Filed', entry.date, 'date');
+        const titleE = mk('Document Title', entry.title);
+        const partyE = mk('Filing Party', entry.party);
+        const linkE = mk('Google Drive Link', entry.link);
+        const typeF = el('div', 'form-field'); typeF.appendChild(el('label', null, 'Document Type'));
+        const typeS = document.createElement('select'); typeS.innerHTML = DOCTYPE_TAGS.map(t => `<option value="${t}"${t === entry.docType ? ' selected' : ''}>${t}</option>`).join('');
+        typeF.appendChild(typeS);
+        const statusF = el('div', 'form-field'); statusF.appendChild(el('label', null, 'Status'));
+        const statusS = document.createElement('select'); statusS.innerHTML = LEDGER_STATUS.map(s => `<option value="${s}"${s === entry.status ? ' selected' : ''}>${s}</option>`).join('');
+        statusF.appendChild(statusS);
+        const matterF = el('div', 'form-field'); matterF.appendChild(el('label', null, 'Matter'));
+        const matterS = document.createElement('select'); matterS.innerHTML = MATTER_TAGS.map(m => `<option value="${m}"${m === entry.matter ? ' selected' : ''}>${m}</option>`).join('');
+        matterF.appendChild(matterS);
+        [filingE.f, dateE.f, titleE.f, partyE.f, typeF, statusF, matterF, linkE.f].forEach(f => eGrid.appendChild(f));
+        cell.appendChild(eGrid);
+        const btnRow = el('div', 'dictate-row');
+        const saveBtn = el('button', 'dictate-btn', 'Save Changes');
+        saveBtn.type = 'button';
+        saveBtn.onclick = async () => {
+          entry.filingId = filingE.inp.value.trim();
+          entry.date = dateE.inp.value;
+          entry.title = titleE.inp.value.trim();
+          entry.party = partyE.inp.value.trim();
+          entry.link = linkE.inp.value.trim();
+          entry.docType = typeS.value;
+          entry.status = statusS.value;
+          entry.matter = matterS.value;
+          await saveLedger();
+          editingLedgerId = null;
+          render();
+        };
+        const cancelBtn = el('button', 'dictate-btn secondary', 'Cancel');
+        cancelBtn.type = 'button';
+        cancelBtn.onclick = () => { editingLedgerId = null; render(); };
+        btnRow.appendChild(saveBtn); btnRow.appendChild(cancelBtn);
+        cell.appendChild(btnRow);
+        tr.appendChild(cell);
+        table.appendChild(tr);
+        return;
+      }
+      const tr = document.createElement('tr');
+      if (entry.status === 'Discrepancy Flagged') tr.className = 'flag';
+      tr.innerHTML = `<td>${entry.filingId || ''}</td><td>${entry.date || ''}</td><td>${entry.title}</td><td>${entry.party || ''}</td><td>${entry.docType || ''}</td><td class="cite">${entry.matter || ''}</td><td>${entry.status}</td>`;
+      const linkTd = document.createElement('td');
+      if (entry.link) {
+        const openLink = document.createElement('a');
+        openLink.className = 'drive-link'; openLink.href = entry.link; openLink.target = '_blank'; openLink.rel = 'noopener';
+        openLink.textContent = 'Open'; linkTd.appendChild(openLink);
+        linkTd.appendChild(document.createTextNode(' '));
+        linkTd.appendChild(buildPreviewButton(entry.link));
+      }
+      tr.appendChild(linkTd);
+      const btnTd = document.createElement('td');
+      const editBtn = el('button', 'delete-btn', 'Edit');
+      editBtn.style.color = '#1F3864';
+      editBtn.onclick = () => { editingLedgerId = entry.id; render(); };
+      btnTd.appendChild(editBtn);
+      const delBtn = el('button', 'delete-btn', 'Delete');
+      delBtn.onclick = async () => {
+        const msg = entry.status === 'Checked In'
+          ? 'This entry is marked Checked In against the official record. Delete the LEDGER ENTRY only (this never touches the actual filed document)? This cannot be undone.'
+          : 'Delete this ledger entry permanently? This never touches the actual filed document, only this tracker\u2019s record of it. This cannot be undone.';
+        if (!confirm(msg)) return;
+        ledgerEntries = ledgerEntries.filter(e => e.id !== entry.id);
+        await saveLedger();
+        render();
+      };
+      btnTd.appendChild(delBtn);
+      tr.appendChild(btnTd);
+      table.appendChild(tr);
+    });
+    panel.appendChild(table);
+  }
+
+  // ================= LANE SELECTOR (image + invisible clickable zones) =================
+  function renderLaneSelector(root) {
+    const wrap = el('div', 'cover-image-wrap');
+    const img = document.createElement('img');
+    img.src = 'https://2026-appeal-case-mgmt.vercel.app/PWA_CASE-MGTM_Image-Jul-24-2026.png';
+    img.alt = 'Evich v. Stone Case Command Center';
+    img.className = 'cover-image';
+    wrap.appendChild(img);
+    const zones = [
+      { key: 'appeal', label: 'The Appeal',          left: '5%',  top: '52%', width: '43%', height: '30%' },
+      { key: 'cba',    label: 'CBA Fee Arbitration', left: '52%', top: '52%', width: '43%', height: '30%' },
+      { key: 'oarc',   label: 'OARC Complaint',      left: '5%',  top: '72%', width: '43%', height: '22%' },
+      { key: 'whole',  label: 'Whole Case',           left: '52%', top: '72%', width: '43%', height: '22%' }
+    ];
+    zones.forEach(function(zone) {
+      const div = el('div', 'cover-zone');
+      div.setAttribute('aria-label', zone.label);
+      div.setAttribute('role', 'button');
+      div.setAttribute('tabindex', '0');
+      div.style.left = zone.left;
+      div.style.top = zone.top;
+      div.style.width = zone.width;
+      div.style.height = zone.height;
+      div.title = zone.label;
+      div.onclick = () => {
+        currentLane = zone.key;
+        mainTab = zone.key === 'cba' ? 'cba' : (zone.key === 'oarc' ? 'oarc' : 'foundation');
+        render();
+      };
+      div.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') div.onclick(); };
+      wrap.appendChild(div);
+    });
+    root.appendChild(wrap);
+  }
+
+  // ================= CASE FLOW / BENEFIT ANALYSIS =================
+  const CASE_FLOW_PHASES = [
+    { phase: "Pre-Trial", range: "10/27/2024 \u2013 10/24/2025", desc: "Petition filed; contested; Rule 16.2 discovery stayed pending marriage determination; Motion to Compel denied (4/30/2025); counsel substitution (Antolinez \u2192 White, 6/27/2025); JTMC (stipulated facts) filed 10/24/2025." },
+    { phase: "Trial", range: "10/28/2025", desc: "Full-day evidentiary hearing before Judge Jones." },
+    { phase: "Final Ruling", range: "12/4/2025", desc: "No marriage found; petition dismissed with prejudice. Findings 51 and 52, as originally entered, directly contradicted Finding 38 and Finding 83 in the same order." },
+    { phase: "Post-Trial (Rule 59)", range: "12/18/2025 \u2013 4/23/2026", desc: "White withdraws same day Rule 59 deadline expires; Petitioner proceeds pro se; Notice of Asset Designation Changes filed; Judge Jones grants in part, corrects Findings 51 & 52; Judge Washburn's signed order conflicts with that outcome." },
+    { phase: "Appeal", range: "6/9/2026 \u2013 present", desc: "Notice of Appeal filed; Record designated (6/15/2026); Record on Appeal due from the District Court Clerk 8/11/2026; Opening Brief to follow 42 days after." }
+  ];
+
+  const BENEFIT_ANALYSIS = {
+    benefits: [
+      "Two factual errors (Findings 51 and 52) are now admitted by the trial court itself \u2014 not alleged, conceded \u2014 and were never reweighed under the mandatory Hogsett totality standard.",
+      "The application of Hogsett to corrected facts is a legal question reviewed de novo \u2014 the trial court's usual discretion does not extend to whether the mandatory totality analysis was actually performed.",
+      "A successful appeal supports identifying and valuing the marital estate as of the October 27, 2024 filing date, addressing the undisclosed beneficiary deed changes made during litigation (2/27/2025 and 2/4/2026).",
+      "The Notice of Appeal, docket fee, and Designation of Record were all timely filed \u2014 the jurisdictional steps are already secured.",
+      "Nearly three decades (1996\u20132024) of a relationship that predates marriage equality is at stake; LaFleur v. Pyfer directs that conduct, not paperwork, is the primary evidence of intent for exactly this kind of couple."
+    ],
+    costs: [
+      "Colorado gives trial courts wide discretion on factual findings (clear-error review) \u2014 a panel could characterize the corrections as harmless rather than material.",
+      "Preservation risk: whether the Finding 52/83 internal contradiction (not just the JTMC/Exhibit 48 contradiction) was specifically raised in the Rule 59 briefing below.",
+      "Financial cost: appeal costs and briefing time run alongside the still-unresolved CBA fee arbitration (hearing 10/9/2026).",
+      "Time cost: Record on Appeal not due until 8/11/2026; Opening Brief, Answer Brief, optional Reply, and any oral argument could extend well into 2027 before a decision.",
+      "Emotional cost of continuing to relitigate a 28-year relationship in an adversarial forum, with no guarantee that a reweighed totality analysis resolves in Petitioner's favor even on remand."
+    ],
+    bottomLine: "Issue I currently carries a Strength rating of A. The benefits rest on a legal error the trial court has already admitted and on a standard of review (de novo) that does not defer to the trial court's discretion \u2014 that is a stronger foundation than most appeals start from. The principal risks are not about the facts, which are now largely undisputed, but about how the error is framed: preservation of the Finding 52/83 argument specifically, and pre-answering the harmless-error argument before the panel raises it. Both are addressable in the Opening Brief, not open questions about whether to proceed."
+  };
+
+  function renderCaseFlow(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Case Flow \u2014 Phase by Phase'));
+    panel.appendChild(el('div', 'compat-note', 'Each phase links back to the full Rulings & Procedural Timeline in Case Foundation \u2192 Timeline.'));
+    CASE_FLOW_PHASES.forEach((p, i) => {
+      const box = el('div', 'voice-entry');
+      box.style.borderLeft = '4px solid #1F3864';
+      const head = el('div', null, `<strong>${i + 1}. ${p.phase}</strong> <span class="cite">${p.range}</span>`);
+      box.appendChild(head);
+      box.appendChild(el('div', null, p.desc));
+      panel.appendChild(box);
+    });
+  }
+
+  function renderBenefitAnalysis(panel) {
+    panel.appendChild(el('div', 'section-heading', 'Benefits of Pursuing the Appeal'));
+    panel.appendChild(renderTextList(BENEFIT_ANALYSIS.benefits));
+    panel.appendChild(el('div', 'section-heading', 'Costs & Risks'));
+    panel.appendChild(renderTextList(BENEFIT_ANALYSIS.costs));
+    panel.appendChild(el('div', 'section-heading', 'Bottom Line'));
+    const bl = el('div', 'relief-banner');
+    bl.style.background = 'var(--navy)';
+    bl.appendChild(el('div', null, BENEFIT_ANALYSIS.bottomLine));
+    panel.appendChild(bl);
+  }
+
+  let flowBenefitSubTab = 'flow';
+  function renderFlowBenefit(panel) {
+    panel.appendChild(el('div', null, '<strong style="font-size:16px;">Case Flow / Benefit Analysis</strong><div style="font-style:italic;margin-top:4px;">Where the case has been, and the case for continuing forward with the Appeal.</div>'));
+    const subtabs = el('div', 'subtabs');
+    const defs = [['flow', 'Case Flow'], ['benefit', 'Benefit Analysis']];
+    defs.forEach(([key, label]) => {
+      const t = el('div', 'subtab' + (flowBenefitSubTab === key ? ' active' : ''), label);
+      t.onclick = () => { flowBenefitSubTab = key; render(); };
+      subtabs.appendChild(t);
+    });
+    panel.appendChild(subtabs);
+    const inner = el('div');
+    inner.style.paddingTop = '14px';
+    if (flowBenefitSubTab === 'benefit') renderBenefitAnalysis(inner);
+    else renderCaseFlow(inner);
+    panel.appendChild(inner);
+  }
+
+  function laneTabDefs() {
+    if (currentLane === 'cba') return [ ['cba','CBA Fee Arbitration'] ];
+    if (currentLane === 'oarc') return [ ['oarc','OARC Complaint'] ];
+    if (currentLane === 'whole') return [ ['issue1','Issue I'], ['flowbenefit','Case Flow / Benefit'], ['appealreq','Appeal Requirements'], ['cba','CBA'], ['oarc','OARC'] ];
+    return [ ['issue1','Issue I'], ['flowbenefit','Case Flow / Benefit'], ['appealreq','Appeal Requirements'] ]; // appeal (default)
+  }
+
+  // ================= MAIN RENDER =================
+  async function render() {
+    const root = document.getElementById('root');
+    root.innerHTML = '';
+
+    if (!currentLane) {
+      renderLaneSelector(root);
+      return;
+    }
+
+    const header = el('div', 'header');
+    header.appendChild(el('div', 'version', 'CASE TRACKER \u2014 v24 \u2014 July 24, 2026 \u2014 Background white space filled with image navy #0D1B2E'));
+    const titleRow = el('div', 'title-row');
+    const scalesSvg = `<svg width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="32" y1="6" x2="32" y2="52" stroke="#B08D57" stroke-width="3" stroke-linecap="round"/>
+      <line x1="10" y1="16" x2="54" y2="16" stroke="#B08D57" stroke-width="3" stroke-linecap="round"/>
+      <line x1="32" y1="52" x2="20" y2="58" stroke="#B08D57" stroke-width="3" stroke-linecap="round"/>
+      <line x1="32" y1="52" x2="44" y2="58" stroke="#B08D57" stroke-width="3" stroke-linecap="round"/>
+      <line x1="10" y1="16" x2="4" y2="30" stroke="#B08D57" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="10" y1="16" x2="16" y2="30" stroke="#B08D57" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M4 30 Q10 40 16 30" stroke="#B08D57" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <line x1="54" y1="16" x2="48" y2="30" stroke="#B08D57" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="54" y1="16" x2="60" y2="30" stroke="#B08D57" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M48 30 Q54 40 60 30" stroke="#B08D57" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <circle cx="32" cy="10" r="4" fill="#B08D57"/>
+    </svg>`;
+    titleRow.appendChild(el('div', 'scales-icon', scalesSvg));
+    const titleText = el('div');
+    titleText.appendChild(el('h1', null, 'Evich v. Stone \u2014 Case Command Center'));
+    titleText.appendChild(el('div', 'sub', 'Case No. 2024DR31793 (District Court) / 2026CA1119 (Court of Appeals)'));
+    titleRow.appendChild(titleText);
+    header.appendChild(titleRow);
+    const homeBtn = el('div', 'change-lane', '\u2302 Home');
+    homeBtn.onclick = () => { currentLane = null; render(); };
+    header.appendChild(homeBtn);
+    const wideBtn = el('button', 'landscape-toggle-btn' + (wideView ? ' active' : ''), wideView ? '\u2610 Wide View: On' : '\u2610 Wide View: Off');
+    wideBtn.type = 'button';
+    wideBtn.title = 'Widen the layout for reading dense tables \u2014 independent of device rotation.';
+    wideBtn.onclick = async () => { wideView = !wideView; await storageSet('wide_view', wideView ? '1' : '0'); render(); };
+    header.appendChild(wideBtn);
+    const shareBtn = el('button', 'landscape-toggle-btn', '\u21ea Share');
+    shareBtn.type = 'button';
+    shareBtn.title = 'Share a link to this tracker.';
+    shareBtn.onclick = async () => {
+      const shareData = { title: 'Evich v. Stone \u2014 Case Command Center', text: 'Case tracker for Evich v. Stone.', url: window.location.href };
+      if (navigator.share) {
+        try { await navigator.share(shareData); return; } catch (e) { /* user cancelled or unsupported, fall through */ }
+      }
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        shareBtn.textContent = '\u2713 Link Copied';
+      } catch (e) {
+        shareBtn.textContent = 'Copy failed \u2014 copy URL manually';
+      }
+      setTimeout(() => { shareBtn.textContent = '\u21ea Share'; }, 1800);
+    };
+    header.appendChild(shareBtn);
+    root.classList.toggle('wide-view', wideView);
+    const vh = el('div', 'version-history', 'Full version history now lives under Case Foundation \u2192 Version History.');
+    header.appendChild(vh);
+    root.appendChild(header);
+
+    const maintabs = el('div', 'maintabs');
+    const tabDefs = [ ['foundation','Case Foundation'], ...laneTabDefs(), ['labels','Label Tracker'], ['voice','Notes'], ['stephanie',"Stephanie's World"] ];
+    tabDefs.forEach(([key, label]) => {
+      const t = el('div', 'maintab' + (mainTab === key ? ' active' : ''), label);
+      t.onclick = () => { mainTab = key; render(); };
+      maintabs.appendChild(t);
+    });
+    root.appendChild(maintabs);
+
+    const panel = el('div', 'body-panel');
+    if (mainTab === 'foundation') renderFoundation(panel);
+    else if (mainTab === 'issue1') await renderIssue(panel);
+    else if (mainTab === 'appealreq') renderAppealRequirements(panel);
+    else if (mainTab === 'cba') await renderCBA(panel);
+    else if (mainTab === 'flowbenefit') renderFlowBenefit(panel);
+    else if (mainTab === 'oarc') renderOARC(panel);
+    else if (mainTab === 'stephanie') renderStephanieWorld(panel);
+    else if (mainTab === 'labels') renderLabelTracker(panel);
+    else renderNotesTab(panel);
+    root.appendChild(panel);
+
+    renderMasterMic(root);
+    renderDrivePreviewModal(root);
+  }
+
+  (async function init() {
+    await loadVoiceLog();
+    await loadLedger();
+    await loadStephanieLinks();
+    await loadLabelEntries();
+    await loadDocLinkProgress();
+    lastExportTime = await storageGet('last_export_time');
+    const wv = await storageGet('wide_view');
+    wideView = wv === '1';
+    render();
+  })();
+</script>
+</body>
+</html>
